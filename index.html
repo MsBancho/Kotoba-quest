@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1b1b2f">
+<title>Kotoba Quest</title>
+<style>
+:root{--ink:#1b1b2f;--muted:#4f5368;--bg:#f6f3ee;--paper:#ffffff;--hero:#d7263d;--teal:#2b59c3;--violet:#7b2cbf;--chip:#efedf5;--r:6px}
+*{box-sizing:border-box}
+html{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP","Avenir Next",Aptos,system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+body{margin:0;min-height:100vh;background:radial-gradient(rgba(27,27,47,.13) 1px,transparent 1.4px) 0 0/7px 7px,var(--bg)}
+button,select{font:inherit;color:inherit}
+button{min-height:44px;cursor:pointer}
+.skip{position:absolute;left:-9999px}.skip:focus{left:12px;top:12px;z-index:9;background:#fff;padding:10px}
+.app{max-width:1080px;margin:auto;padding:14px 14px 36px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:42px;height:42px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:900;font-size:1.3rem;border-radius:4px;flex:none;box-shadow:3px 3px 0 var(--hero)}
+.brand h1{margin:0;font-size:1.4rem;font-weight:900;letter-spacing:.02em;transform:skewX(-8deg)}
+.stats{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pill{background:#fff;border:2px solid var(--ink);border-radius:999px;padding:5px 11px;font-weight:800;font-size:.86rem;white-space:nowrap}
+.panel{background:var(--paper);border:3px solid var(--ink);border-radius:var(--r);box-shadow:6px 6px 0 var(--ink);padding:clamp(14px,2.6vw,24px)}
+.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:.72rem;font-weight:900;color:var(--hero)}
+h2{margin:6px 0 10px;font-size:clamp(1.5rem,4vw,2.3rem);line-height:1.1;font-weight:900;transform:skewX(-6deg);transform-origin:left}
+.btn{border:3px solid var(--ink);border-radius:6px;padding:8px 15px;font-weight:900;background:#fff;box-shadow:3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.primary{background:var(--hero);color:#fff}
+.btn.teal{background:var(--teal);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn:focus-visible,.choice:focus-visible,select:focus-visible{outline:3px solid var(--violet);outline-offset:3px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hidden{display:none!important}
+.view{display:none}.view.active{display:block}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.sky{background:repeating-conic-gradient(from 0deg at 50% 75%,#ffffff 0deg 4deg,#eceaf6 4deg 9deg);border:3px solid var(--ink);border-radius:4px}
+.hero-art{display:grid;place-items:center;min-height:210px}
+.hero-art svg{width:100%;max-width:300px;height:auto}
+.bar{height:12px;background:#fff;border:2px solid var(--ink);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--teal);width:0;transition:width .35s}
+.bar.hp>i{background:var(--hero)}.bar.hp.me>i{background:#1fa37a}
+.skills{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px}
+.skills li{display:flex;gap:8px;align-items:flex-start;font-size:.9rem}
+.skills .dot{width:12px;height:12px;background:var(--hero);border:2px solid var(--ink);flex:none;margin-top:3px;transform:rotate(45deg)}
+.skills li.locked{color:var(--muted)}.skills li.locked .dot{background:#fff}
+.field{display:grid;gap:5px;margin-top:10px}.field label{font-weight:800;font-size:.9rem}
+.field select{min-height:44px;border:3px solid var(--ink);border-radius:6px;background:#fff;padding:6px}
+/* map */
+.mapgrid{display:grid;grid-template-columns:1.7fr 1fr;gap:16px}
+.mapwrap{padding:8px;background:radial-gradient(rgba(43,89,195,.2) 1.2px,transparent 1.6px) 0 0/8px 8px,#eef4ff}
+#worldMap{width:100%;height:auto;display:block}
+.island{cursor:pointer;outline:none}.island.locked{cursor:not-allowed}.island:focus-visible .ring{stroke:#7b2cbf}
+.island .lbl{font-size:22px;font-weight:900;fill:var(--ink);paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round}
+.island.sel .ring{stroke:#d7263d}
+.float{animation:float 5s ease-in-out infinite}
+.cloud{animation:drift 40s linear infinite}
+.path{stroke-dasharray:4 10;animation:flow 3s linear infinite}
+#mapHero{transition:transform .7s cubic-bezier(.4,1.6,.5,1)}
+.badge{animation:pulse 1.6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes drift{from{transform:translateX(-160px)}to{transform:translateX(980px)}}
+@keyframes flow{to{stroke-dashoffset:-28}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.mon-mini svg{width:100%;height:120px;display:block}
+.region-meta{font-size:.9rem;color:var(--muted);margin:8px 0}
+/* npc + lessons */
+.npc-art svg{width:100%;max-height:200px;height:auto;display:block}
+.bubble{background:#fff;border:3px solid var(--ink);border-radius:18px;padding:14px 16px;font-size:1.05rem;line-height:1.45;position:relative;margin:16px 0 12px;min-height:3.2em;font-weight:600}
+.bubble:before{content:"";position:absolute;left:24px;top:-15px;border:12px solid transparent;border-top:0;border-bottom:15px solid var(--ink)}
+.bubble:after{content:"";position:absolute;left:28px;top:-9px;border:8px solid transparent;border-top:0;border-bottom:10px solid #fff}
+.lessons{display:grid;gap:10px;margin-top:10px}
+.lessons .btn{text-align:left;display:flex;justify-content:space-between;gap:8px}
+.lessons .done{color:#1fa37a;font-weight:900}
+/* battle */
+.stage{padding:10px;position:relative;overflow:hidden;border:3px solid var(--ink);border-radius:var(--r);box-shadow:6px 6px 0 var(--ink);background:radial-gradient(circle at 50% 46%,#fff 0 20%,transparent 21%),repeating-conic-gradient(from 0deg at 50% 46%,#fff 0deg 3deg,var(--tint,#dcdff2) 3deg 6deg)}
+.stage svg{width:100%;height:auto;display:block;max-height:260px}
+.hpbox{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;font-size:.82rem;font-weight:900}
+.hpbox span{background:#fff;padding:0 4px;border-radius:3px}
+.drama{display:flex;gap:10px;align-items:center;background:#fff;border:3px solid var(--ink);border-radius:16px;padding:6px 10px;margin-top:10px;min-height:64px}
+.drama svg{width:52px;height:52px;flex:none;border:2px solid var(--ink);border-radius:6px;background:repeating-conic-gradient(from 0deg at 50% 50%,#fff 0 6deg,#ececf4 6deg 12deg)}
+.drama b{display:block;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:#1fa37a}
+.drama.mon b{color:var(--hero)}
+.drama span{font-weight:800;font-size:.95rem;line-height:1.3}
+.cutin{position:absolute;left:0;right:0;top:20%;pointer-events:none;z-index:3}
+.cutin-band{display:flex;align-items:center;gap:12px;background:repeating-linear-gradient(100deg,#1b1b2f 0 14px,#2c2c4c 14px 17px);color:#fff;border-top:4px solid #fff;border-bottom:4px solid #fff;padding:6px 14px;box-shadow:0 0 0 3px var(--ink);transform:skewY(-6deg);animation:cut .95s ease-out forwards}
+.cutin-band svg{width:72px;height:54px;flex:none;background:#fff;border:3px solid #fff}
+.cutin-band span{font-weight:900;font-size:clamp(1.05rem,3.4vw,1.6rem);line-height:1.2}
+@keyframes cut{0%{transform:skewY(-6deg) translateX(-110%)}18%{transform:skewY(-6deg) translateX(0)}82%{transform:skewY(-6deg) translateX(0);opacity:1}100%{transform:skewY(-6deg) translateX(110%);opacity:0}}
+.q{text-align:center}
+.prompt{font-size:clamp(2.2rem,8vw,4.4rem);line-height:1.15;margin:6px 0 2px;font-weight:900;word-break:keep-all}
+.prompt.long{font-size:clamp(1.6rem,5.5vw,2.8rem)}
+.hint{color:var(--muted);min-height:1.4em;font-size:.92rem;font-weight:600}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.choice{border:3px solid var(--ink);border-radius:6px;background:#fff;padding:9px;font-weight:800;min-height:50px;box-shadow:3px 3px 0 var(--ink)}
+.choice:hover:not(:disabled){background:#fff5d6}
+.choice:disabled{box-shadow:none}
+.choice.correct{background:#c8f7dc}.choice.wrong{background:#ffc9d0}
+.log{min-height:2.6em;font-weight:800;font-size:.92rem;margin-top:8px}
+.tip{display:flex;gap:10px;align-items:center;background:#fff;border:3px solid var(--ink);border-radius:16px;padding:8px 10px;text-align:left;font-size:.9rem;margin-top:6px;font-weight:600}
+.tip svg{width:48px;height:48px;flex:none;background:#e3ecff;border:2px solid var(--ink);border-radius:6px}
+.bob{animation:bob 2.4s ease-in-out infinite}
+.scarf{animation:wave 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:right center}
+.aura,.rage{animation:pulse 1.2s ease-in-out infinite}
+.lunge-r{animation:lungeR .35s}.lunge-l{animation:lungeL .35s}.hit{animation:hit .35s .1s}.sink{animation:sink .8s forwards}
+@keyframes wave{0%,100%{transform:skewY(0)}50%{transform:skewY(-8deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes lungeR{50%{transform:translateX(30px)}}@keyframes lungeL{50%{transform:translateX(-30px)}}
+@keyframes hit{0%,100%{transform:translateX(0)}30%{transform:translateX(-7px)}60%{transform:translateX(7px)}}
+@keyframes sink{to{transform:translateY(40px);opacity:0}}
+.floater{position:absolute;font-weight:900;font-size:1.35rem;pointer-events:none;animation:up .9s forwards;text-shadow:2px 2px 0 #fff,-1px -1px 0 #fff}
+.floater.dmg{color:var(--hero)}.floater.heal{color:#1fa37a}
+@keyframes up{to{transform:translateY(-40px);opacity:0}}
+.sfx{position:absolute;font-weight:900;font-size:clamp(1.5rem,5vw,2.3rem);color:#ffd166;-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--ink);pointer-events:none;white-space:nowrap;animation:sfx .8s forwards}
+.sfx.bad{color:#ff8fa3}
+@keyframes sfx{0%{transform:rotate(-12deg) scale(.4);opacity:0}25%{transform:rotate(-12deg) scale(1.15);opacity:1}100%{transform:rotate(-12deg) scale(1);opacity:0}}
+.spark{animation:spark .5s forwards}
+@keyframes spark{to{transform:translate(var(--dx),var(--dy));opacity:0}}
+.banner{background:#ffc9d0;border:3px solid var(--ink);border-radius:6px;padding:10px;margin-bottom:12px;font-weight:700}
+.toast{background:var(--ink);color:#fff;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-weight:800;box-shadow:4px 4px 0 var(--hero)}
+.footer{text-align:center;color:var(--muted);font-size:.8rem;margin-top:24px}
+@media(max-width:760px){.island .lbl{font-size:26px}.two,.mapgrid{grid-template-columns:1fr}.hero-art{min-height:160px}.stage svg{max-height:190px}.mon-mini svg{height:90px}}
+@media(max-height:430px) and (orientation:landscape){.app{padding:8px}.top{margin-bottom:6px}.two,.mapgrid{grid-template-columns:1.3fr 1fr}.stage svg{max-height:120px}.prompt{font-size:2rem}.prompt.long{font-size:1.5rem}.choices{margin:6px 0}.choice{min-height:44px;padding:6px}.hero-art{min-height:140px}h2{font-size:1.35rem}.mon-mini svg{height:70px}.npc-art svg{max-height:110px}.bubble{padding:10px;font-size:.95rem}.drama{min-height:0;padding:4px 8px}.drama svg{width:40px;height:40px}.sfx{font-size:1.25rem;-webkit-text-stroke:1.5px var(--ink);text-shadow:2px 2px 0 var(--ink)}.floater{font-size:1.1rem}}
+@media(prefers-reduced-motion:reduce){*,*:before{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="app">
+<header class="top">
+  <div class="brand"><div class="logo" aria-hidden="true">言</div><h1>Kotoba Quest</h1></div>
+  <div class="stats" aria-label="Your progress"><span class="pill">Lv <span id="lvl">1</span></span><span class="pill"><span id="xp">0</span> XP</span><span class="pill"><span id="streak">0</span> day streak</span></div>
+</header>
+<div id="errorBanner" class="banner hidden" role="alert"></div>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+<main id="main">
+
+<section id="homeView" class="view active" aria-labelledby="homeTitle">
+  <div class="two">
+    <div class="panel">
+      <div class="eyebrow">Your hero · Kai</div>
+      <h2 id="homeTitle">Every word you learn makes you stronger.</h2>
+      <div class="hero-art sky"><svg id="heroArt" viewBox="0 0 200 150" role="img" aria-label="Your hero"></svg></div>
+      <p id="heroTitle" style="font-weight:700;margin:10px 0 4px"></p>
+      <div class="row" style="justify-content:space-between;font-size:.85rem"><span id="xpLabel"></span><span id="statLabel"></span></div>
+      <div class="bar" aria-hidden="true"><i id="xpFill"></i></div>
+      <ul id="skillList" class="skills" aria-label="Skills"></ul>
+      <div class="row" style="margin-top:14px"><button id="adventureBtn" class="btn primary">Open the world map</button></div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow">Training dojo</div>
+      <h2 style="font-size:1.5rem">Quick 10-question practice</h2>
+      <p style="color:var(--muted);margin:0">Training gives a little XP. Battles and teacher lessons give more.</p>
+      <div class="field"><label for="deckSelect">Training deck</label><select id="deckSelect"><option value="hiragana">Hiragana (46)</option><option value="katakana">Katakana (46)</option><option value="dakuten">Dakuten kana (23)</option><option value="vocab">Manga vocabulary (27)</option><option value="phrases">Everyday phrases (22)</option><option value="grammar">Grammar (16)</option><option value="mixed">Everything (180)</option></select></div>
+      <div class="row" style="margin-top:12px"><button id="startBtn" class="btn teal">Start training</button><button id="practiceBtn" class="btn">Practise weak cards</button></div>
+      <p id="learnedLabel" style="color:var(--muted);font-size:.88rem;margin:14px 0 0"></p>
+    </div>
+  </div>
+</section>
+
+<section id="mapView" class="view" aria-labelledby="regionName">
+  <div class="mapgrid">
+    <div class="panel mapwrap"><svg id="worldMap" viewBox="0 0 820 470" aria-label="World map. Use Tab to move between regions."></svg></div>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><span class="eyebrow" id="regionEyebrow">Region</span><button id="mapHomeBtn" class="btn">← Home</button></div>
+      <h2 id="regionName" style="font-size:1.5rem"></h2>
+      <div class="mon-mini sky"><svg id="regionMon" viewBox="0 0 160 110" role="img" aria-label=""></svg></div>
+      <p id="regionMeta" class="region-meta"></p>
+      <div class="row"><button id="fightBtn" class="btn primary">Fight</button><button id="teacherBtn" class="btn teal">Teacher</button></div>
+    </div>
+  </div>
+</section>
+
+<section id="npcView" class="view" aria-labelledby="npcName">
+  <div class="two">
+    <div class="panel"><div class="npc-art sky"><svg id="npcArt" viewBox="0 0 200 130" role="img" aria-label="Teacher"></svg></div></div>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><span class="eyebrow">Teacher</span><button id="npcBackBtn" class="btn">← Map</button></div>
+      <h2 id="npcName" style="font-size:1.5rem"></h2>
+      <div id="npcGreet" class="bubble"></div>
+      <div id="lessonList" class="lessons"></div>
+    </div>
+  </div>
+</section>
+
+<section id="lessonView" class="view" aria-labelledby="lessonTitle">
+  <div class="two">
+    <div class="panel"><div class="npc-art sky"><svg id="lessonArt" viewBox="0 0 200 130" role="img" aria-label="Teacher"></svg></div></div>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><span class="eyebrow" id="lessonStep"></span><button id="lessonBackBtn" class="btn">← Leave</button></div>
+      <h2 id="lessonTitle" style="font-size:1.4rem"></h2>
+      <div id="lessonText" class="bubble" aria-live="polite"></div>
+      <button id="lessonNextBtn" class="btn teal">Next →</button>
+      <div id="lessonQuiz" class="q hidden">
+        <div class="eyebrow" id="lAsk">Pop quiz</div>
+        <div id="lPrompt" class="prompt" lang="ja"></div>
+        <div id="lHint" class="hint"></div>
+        <div id="lChoices" class="choices"></div>
+        <div id="lFeedback" class="log" aria-live="polite"></div>
+      </div>
+      <button id="lessonDoneBtn" class="btn primary hidden">Back to teacher</button>
+    </div>
+  </div>
+</section>
+
+<section id="battleView" class="view" aria-labelledby="battleTitle">
+  <div class="two">
+    <div class="stage" id="battleStage">
+      <svg id="stageArt" viewBox="0 0 300 180" role="img" aria-label="Battle scene"></svg>
+      <div id="floaters" aria-hidden="true"></div>
+      <div id="cutIn" class="cutin hidden" aria-hidden="true"><div class="cutin-band"><svg id="cutInArt" viewBox="-14 -84 30 24"></svg><span id="cutInText"></span></div></div>
+      <div class="hpbox">
+        <div><span id="heroHpLabel">You</span><div class="bar hp me"><i id="heroHpFill"></i></div></div>
+        <div><span id="monHpLabel">Monster</span><div class="bar hp"><i id="monHpFill"></i></div></div>
+      </div>
+      <div id="dramaBox" class="drama hidden" aria-live="polite"><svg id="dramaFace" viewBox="-17 -94 36 42" aria-hidden="true"></svg><div><b id="dramaWho"></b><span id="dramaText"></span></div></div>
+    </div>
+    <div class="panel q">
+      <div class="row" style="justify-content:space-between"><button id="fleeBtn" class="btn">Flee</button><span class="eyebrow" id="battleTitle">Battle</span></div>
+      <div id="bPrompt" class="prompt" lang="ja"></div>
+      <div id="bHint" class="hint"></div>
+      <div id="bChoices" class="choices"></div>
+      <div class="row" style="justify-content:center"><button id="focusBtn" class="btn">Focus</button><button id="healBtn" class="btn">Mend</button><button id="bNextBtn" class="btn primary hidden">Next turn →</button><button id="bDoneBtn" class="btn primary hidden">Continue</button></div>
+      <div id="bLog" class="log" aria-live="polite"></div>
+      <div id="tipBox" class="tip hidden"><svg id="tipArt" viewBox="-42 -66 84 76" aria-hidden="true"></svg><span id="tipText"></span></div>
+    </div>
+  </div>
+</section>
+
+<section id="quizView" class="view" aria-labelledby="quizTitle">
+  <div class="panel q">
+    <div class="row" style="justify-content:space-between"><button id="quitBtn" class="btn">← Quit</button><strong id="counter">1 / 10</strong></div>
+    <div class="bar" style="margin:10px 0" aria-hidden="true"><i id="progressFill"></i></div>
+    <div class="eyebrow" id="quizTitle">Choose the sound</div>
+    <div id="prompt" class="prompt" lang="ja"></div>
+    <div id="hint" class="hint"></div>
+    <div id="choices" class="choices" style="max-width:560px;margin-inline:auto"></div>
+    <div id="feedback" class="log" aria-live="polite"></div>
+    <button id="nextBtn" class="btn primary hidden">Next →</button>
+  </div>
+</section>
+
+<section id="resultView" class="view" aria-labelledby="resultTitle">
+  <div class="panel q">
+    <div class="eyebrow">Training complete</div>
+    <h2 id="resultTitle">よくできました!</h2>
+    <div id="resultScore" class="prompt"></div>
+    <p id="resultText"></p>
+    <div class="row" style="justify-content:center"><button id="againBtn" class="btn teal">Train again</button><button id="homeBtn" class="btn">Home</button></div>
+  </div>
+</section>
+</main>
+<footer class="footer">Kotoba Quest v<span id="ver"></span> · Original characters and story · Progress stays in this browser</footer>
+</div>
+<script>
+'use strict';
+/* ===== CONFIG ===== */
+const CONFIG=Object.freeze({APP_VERSION:'4.0.0',DATA_VERSION:3,QUIZ_LENGTH:10,MAX_LEVEL:12,MAX_HISTORY:200,MAX_FLOATERS:6,
+ DOJO_XP_CORRECT:3,DOJO_XP_WRONG:1,LESSON_XP:15,ENRAGE_CHANCE:0.2,STORAGE_KEY:'kotobaQuestProgress',
+ FEATURES:Object.freeze({rpg:true,weakPractice:true,localProgress:true,npcs:true,animations:true,enraged:true,battleTips:true,mangaFx:true,drama:true})});
+
+/* ===== KANA ===== */
+const KANA_ROWS=[['a','i','u','e','o'],['ka','ki','ku','ke','ko'],['sa','shi','su','se','so'],['ta','chi','tsu','te','to'],['na','ni','nu','ne','no'],['ha','hi','fu','he','ho'],['ma','mi','mu','me','mo'],['ya','','yu','','yo'],['ra','ri','ru','re','ro'],['wa','','','','wo'],['n','','','','']];
+const HIRA='あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもや　ゆ　よらりるれろわ　　　をん　　　　';
+const KATA='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤ　ユ　ヨラリルレロワ　　　ヲン　　　　';
+const DAKU_ROWS=[['ga','gi','gu','ge','go'],['za','ji','zu','ze','zo'],['da','','','de','do'],['ba','bi','bu','be','bo'],['pa','pi','pu','pe','po']];
+const DAKU='がぎぐげござじずぜぞだ　　でどばびぶべぼぱぴぷぺぽ';
+function buildKana(rows,chars,prefix,deckOf){const out=[];rows.forEach((row,r)=>row.forEach((ro,c)=>{if(!ro)return;out.push({id:prefix+ro,deck:deckOf(r),front:chars[r*5+c],answer:ro,row:r,col:c,ask:'sound'});}));return out;}
+function kanaAlts(card,set){const others=set.filter(o=>o.answer!==card.answer);const near=others.filter(o=>o.row===card.row||o.col===card.col);const far=others.filter(o=>!(o.row===card.row||o.col===card.col));
+ const pick=seededShuffle(near,hashStr(card.id)).concat(seededShuffle(far,hashStr(card.id)+1));const alts=[];for(const o of pick){if(!alts.includes(o.answer))alts.push(o.answer);if(alts.length===3)break;}return alts;}
+function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function seededShuffle(items,seed){let x=(seed>>>0)||1;const a=items.slice();for(let i=a.length-1;i>0;i--){x=(Math.imul(x,1664525)+1013904223)>>>0;const j=x%(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ===== WORD CARDS (alts written by hand) ===== */
+const VOCAB=[['nakama','仲間','なかま','Comrade',['Enemy','Castle','Secret']],['yume','夢','ゆめ','Dream',['Sky','Sword','Promise']],['chikara','力','ちから','Power',['Light','Water','School']],['teki','敵','てき','Enemy',['Comrade','Teacher','Heart']],['ken','剣','けん','Sword',['Magic','Mountain','Dog']],['mahou','魔法','まほう','Magic',['Battle','King','Sea']],['yakusoku','約束','やくそく','Promise',['Secret','Dream','World']],['himitsu','秘密','ひみつ','Secret',['Promise','Life','Cat']],['tomodachi','友達','ともだち','Friend',['Enemy','King','Teacher']],['neko','猫','ねこ','Cat',['Dog','Fire','Hero']],['inu','犬','いぬ','Dog',['Cat','Sea','Light']],['sora','空','そら','Sky',['Sea','Mountain','Darkness']],['umi','海','うみ','Sea',['Sky','Fire','Castle']],['yama','山','やま','Mountain',['Sky','Sea','Sword']],['hi','火','ひ','Fire',['Water','Light','Heart']],['mizu','水','みず','Water',['Fire','Sky','Power']],['kokoro','心','こころ','Heart',['Life','Power','Dream']],['sensei','先生','せんせい','Teacher',['School','Friend','King']],['gakkou','学校','がっこう','School',['Castle','Teacher','World']],['sekai','世界','せかい','World',['Sky','Battle','Secret']],['yuusha','勇者','ゆうしゃ','Hero',['Enemy','Cat','Magic']],['ou','王','おう','King',['Hero','Castle','Mountain']],['shiro','城','しろ','Castle',['School','King','Sea']],['tatakai','戦い','たたかい','Battle',['Promise','Magic','Darkness']],['hikari','光','ひかり','Light',['Darkness','Fire','Sky']],['yami','闇','やみ','Darkness',['Light','Dream','Water']],['inochi','命','いのち','Life',['Heart','Power','World']]];
+const PHRASES=[['hello','こんにちは','Hello',['Good night','Thank you','See you'],'A daytime greeting'],['thanks','ありがとう','Thank you',['Sorry','I’m home','Good morning'],'Expression of gratitude'],['letsgo','行こう!','Let’s go!',['Wait!','I understand','Be quiet'],'いこう'],['okay','大丈夫?','Are you okay?',['Who are you?','Where is it?','Is it tasty?'],'だいじょうぶ?'],['really','本当?','Really?',['Why?','Tomorrow?','How much?'],'ほんとう?'],['amazing','すごい!','Amazing!',['Dangerous!','Delicious!','Sleepy!'],'Positive surprise'],['wait','ちょっと待って','Wait a moment',['Come with me','Please sit','Try again'],'まって = wait'],['understand','わかった','I understand',['I don’t know','I forgot','I am tired'],'Casual past form of わかる'],['do-best','がんばって!','Do your best!',['Go home!','Be careful!','Take a break!'],'Encouragement'],['see-you','またね','See you',['Excuse me','Welcome','Good night'],'Casual farewell'],
+['shimatta','しまった!','Oh no!',['Yes!','Leave it to me!','Let’s eat'],'When something goes wrong'],['makasete','まかせて!','Leave it to me!',['Help!','Oh no!','Watch out!'],'Hero line'],['abunai','危ない!','Watch out!',['Let’s go!','Thank you','I see'],'あぶない!'],['tadaima','ただいま','I’m home',['Welcome back','Good night','See you'],'Said when you arrive home'],['okaeri','おかえり','Welcome back',['I’m home','Hello','Sorry'],'Said to someone arriving home'],['itadakimasu','いただきます','Let’s eat (thanks for the food)',['Good morning','Leave it to me!','Help!'],'Before a meal'],['gomen','ごめんね','Sorry',['Thank you','Amazing!','Shut up!'],'Casual apology'],['ohayou','おはよう','Good morning',['Good night','Hello','See you'],'Morning greeting'],['oyasumi','おやすみ','Good night',['Good morning','Welcome back','Really?'],'Before sleep'],['urusai','うるさい!','Shut up! / Noisy!',['Sorry','Help!','I see'],'Not polite'],['tasukete','助けて!','Help!',['Watch out!','Wait a moment','Let’s go!'],'たすけて!'],['naruhodo','なるほど','I see',['Oh no!','Really?','Help!'],'When something makes sense']];
+const GRAMMAR=[['wo','パン＿たべます','を','particle',['に','で','の'],'I eat bread.'],['to','ともだち＿あそびます','と','particle',['を','の','へ'],'I play with a friend.'],['de','としょかん＿べんきょうします','で','particle',['を','と','の'],'I study at the library.'],['ni-time','７じ＿おきます','に','particle',['で','を','の'],'I get up at 7.'],['no','わたし＿ほん','の','particle',['を','で','と'],'my book'],['ga','ねこ＿すきです','が','particle',['で','へ','と'],'I like cats.'],['ni-place','がっこう＿いきます','に','particle',['を','で','と'],'I go to school.'],['wa','これ＿ペンです','は','particle',['を','で','に'],'This is a pen.'],
+['tai','たべたい','I want to eat',['Let’s eat','I ate','Don’t eat'],'meaning','〜たい'],['mashou','いきましょう','Let’s go',['I want to go','I went','I must go'],'meaning','〜ましょう'],['chatta','たべちゃった','I ate it all (oops)',['I want to eat','Let’s eat','I won’t eat'],'meaning','〜ちゃった'],['naide','みないで','Don’t look',['Please look','I saw it','Let’s look'],'meaning','〜ないで'],['te','みて!','Look!',['Don’t look!','I looked','Let’s watch'],'meaning','〜て (request)'],['nai','いかない','I won’t go',['Let’s go','I want to go','I went'],'meaning','〜ない'],['mashita','のみました','I drank',['I will drink','Let’s drink','I want to drink'],'meaning','〜ました'],['reru','はしれる','I can run',['I ran','Let’s run','Don’t run'],'meaning','potential form']];
+
+const CARDS=(function(){
+ const hira=buildKana(KANA_ROWS,HIRA,'h-',r=>r<=4?'hira1':'hira2');const kata=buildKana(KANA_ROWS,KATA,'k-',()=>'kata');const daku=buildKana(DAKU_ROWS,DAKU,'d-',()=>'daku');
+ for(const set of [hira,kata,daku])for(const c of set)c.alts=kanaAlts(c,set);
+ const vocab=VOCAB.map(([id,f,read,ans,alts])=>({id:'v-'+id,deck:'vocab',front:f,answer:ans,alts,hint:read,ask:'meaning'}));
+ const phr=PHRASES.map(([id,f,ans,alts,hint])=>({id:'p-'+id,deck:'phrase',front:f,answer:ans,alts,hint,ask:'meaning'}));
+ const gr=GRAMMAR.map(g=>g[3]==='particle'?{id:'g-'+g[0],deck:'grammar',front:g[1],answer:g[2],alts:g[4],hint:g[5],ask:'particle'}:{id:'g-'+g[0],deck:'grammar',front:g[1],answer:g[2],alts:g[3],hint:g[5],ask:'meaning'});
+ return Object.freeze(hira.concat(kata,daku,vocab,phr,gr).map(c=>Object.freeze(c)));})();
+const CARD_BY_ID=Object.freeze(Object.fromEntries(CARDS.map(c=>[c.id,c])));
+const ASK_LABEL=Object.freeze({sound:'Choose the sound',meaning:'Choose the meaning',particle:'Fill in the particle'});
+const DECK_HINT=Object.freeze({hira1:'Hiragana',hira2:'Hiragana',kata:'Katakana',daku:'Dakuten kana'});
+const TRAIN_DECKS=Object.freeze({hiragana:['hira1','hira2'],katakana:['kata'],dakuten:['daku'],vocab:['vocab'],phrases:['phrase'],grammar:['grammar'],mixed:null});
+
+/* ===== WORLD ===== */
+const REGIONS=Object.freeze([
+ {id:'meadow',name:'Hiragana Meadow',decks:['hira1'],minLevel:1,x:150,y:390,color:'#9bd17a',npc:'mochi',mon:{id:'blob',name:'Kana Blob',hp:30,atk:6,xp:30,color:'#3fb8af',shape:'blob'}},
+ {id:'river',name:'River of Loops',decks:['hira2'],minLevel:2,x:270,y:320,color:'#7cc6e0',npc:'kappa',mon:{id:'wisp',name:'River Wisp',hp:40,atk:7,xp:40,color:'#4a90c2',shape:'wisp'}},
+ {id:'cliffs',name:'Katakana Cliffs',decks:['kata'],minLevel:3,x:160,y:200,color:'#c9b8f0',npc:'origami',mon:{id:'shard',name:'Kata Shard',hp:55,atk:9,xp:55,color:'#7b6cd9',shape:'shard'}},
+ {id:'dunes',name:'Dakuten Dunes',decks:['daku'],minLevel:4,x:300,y:110,color:'#f3d08a',npc:'duck',mon:{id:'beetle',name:'Ten-Ten Beetle',hp:65,atk:10,xp:65,color:'#c47a2c',shape:'beetle'}},
+ {id:'market',name:'Word Market',decks:['vocab'],minLevel:5,x:470,y:220,color:'#f6a6b2',npc:'neko',mon:{id:'mimic',name:'Market Mimic',hp:75,atk:11,xp:75,color:'#b5654a',shape:'mimic'}},
+ {id:'harbour',name:'Phrase Harbour',decks:['phrase'],minLevel:6,x:630,y:350,color:'#8fd3c7',npc:'shiba',mon:{id:'oni',name:'Phrase Oni',hp:85,atk:12,xp:90,color:'#f2a541',shape:'oni'}},
+ {id:'temple',name:'Grammar Temple',decks:['grammar'],minLevel:7,x:600,y:110,color:'#e8b4a0',npc:'tanuki',mon:{id:'golem',name:'Particle Golem',hp:100,atk:14,xp:110,color:'#7d8597',shape:'golem'}},
+ {id:'tower',name:'Silent Tower',decks:null,minLevel:9,x:700,y:230,color:'#b8b8c8',npc:null,mon:{id:'tower',name:'Silent Tower',hp:150,atk:18,xp:200,color:'#2b2d42',shape:'tower'}}]);
+const SKILLS=Object.freeze([
+ {id:'focus',name:'Focus',level:2,desc:'Removes two wrong answers. Once per fight.'},
+ {id:'mend',name:'Mend',level:3,desc:'Restores 40% HP. Once per fight.'},
+ {id:'combo',name:'Combo',level:4,desc:'From the third correct answer in a row, hits deal double damage.'},
+ {id:'guard',name:'Guard',level:6,desc:'Monster hits deal 30% less damage.'},
+ {id:'ward',name:'Ward',level:8,desc:'The first monster hit in each fight is blocked.'}]);
+const TITLES=['','Wanderer','Apprentice','Reader','Scribe','Kana Knight','Kana Knight','Word Warden','Word Warden','Sage','Sage','Grand Sage','Kotoba Master'];
+
+/* ===== NPC TEACHERS (original, invented mnemonics) ===== */
+const NPCS=Object.freeze({
+ mochi:{name:'Sensei Mochi',color:'#fff3f0',accent:'#f6a6b2',greet:'Squish! I am soft, but my lessons are not. Okay, a little soft.',lessons:[
+  {id:'mochi-1',tip:'お is a UFO with a tail. Oh!',title:'Five vowels',lines:['あ is an apple with a stick through it. Ah!','い is two eels standing side by side. Eeee!','う is someone doing a U-turn with a little hat.','お is a UFO with a tail. Oh!'],quiz:'h-o'},
+  {id:'mochi-2',tip:'き is a KEY with two teeth. さ has only one, so さ is sad.',title:'Key and sad',lines:['き is a KEY. Count the teeth: two crossbars.','さ has only one crossbar. Sorry さ, you are sad now.','か is a KArate kick with a sweat drop flying off.'],quiz:'h-ki'},
+  {id:'mochi-3',tip:'す is a SWing with a loop in the rope.',title:'Hooks and swings',lines:['し is one smooth hook, like a SHEpherd’s crook.','す is a SWing with a loop in the rope.','せ looks like SEAting: a chair with a back.'],quiz:'h-su'},
+  {id:'mochi-4',tip:'の is a NO-entry sign. You may not pass!',title:'Waves and No',lines:['つ is a TSUnami wave rolling to the right.','と is a TOe with a splinter in it. Ouch.','の is a NO-entry sign. You may not pass! (You may. It is just a letter.)'],quiz:'h-no'}]},
+ kappa:{name:'Captain Kappa',color:'#9bd17a',accent:'#4a90c2',greet:'Ahoy! Do not bow to me, the water dish on my head will spill.',lessons:[
+  {id:'kappa-1',tip:'め is an eye with a lazy swoop. MEh. (ぬ is the one with the noodle loop.)',title:'Noodle loop',lines:['ぬ (from the Meadow) ends with a little noodle loop. Noodle = NU.','め is the same shape, but no loop. Just a lazy swoop. MEh.','No noodle, no NU. I eat the noodle. Kappas love noodles.'],quiz:'h-me'},
+  {id:'kappa-2',tip:'ほ has an extra line on top, like a HOrned helmet.',title:'Ha and Ho',lines:['は: a stick and a person laughing HA.','ほ: the same, with an extra line on top, like a HOrned helmet.'],quiz:'h-ho'},
+  {id:'kappa-3',tip:'ふ is Mount FUji with clouds around it. Squint.',title:'Mount Fu',lines:['ふ is Mount FUji with clouds drifting around it.','You do not see it? Squint. Squint harder. I am a kappa, I believe in you.'],quiz:'h-fu'},
+  {id:'kappa-4',tip:'れ has no curl, its leg kicks out. RE-lax.',title:'Tails',lines:['ね (back in the Meadow) has a curly tail, like a NEko cat.','れ has no curl, its leg kicks out. RE-lax.','わ curves round like a WAddling duck. No tail either.'],quiz:'h-re'}]},
+ origami:{name:'Professor Origami',color:'#ffffff',accent:'#7b6cd9',greet:'Katakana is folded paper: sharp corners, clean lines. Unlike my desk.',lessons:[
+  {id:'origami-1',tip:'ツ: the long stroke falls DOWN, like a TSUnami.',title:'Shi and Tsu',lines:['シ: the long stroke sweeps UP, like SHE is smiling.','ツ: the long stroke falls DOWN, like a TSUnami.','Up is shi. Down is tsu. Fold that into your brain.'],quiz:'k-tsu'},
+  {id:'origami-2',tip:'ン rises upward. Up-N-away!',title:'So and N',lines:['ソ falls downward. Sad. SO sad.','ン rises upward. Up-N-away!'],quiz:'k-n'},
+  {id:'origami-3',tip:'コ as in コーヒー, coffee. A box missing one side.',title:'Foreign words',lines:['Katakana writes foreign words. コーヒー is coffee.','The line ー makes a vowel long. Very elegant fold.'],quiz:'k-ko'},
+  {id:'origami-4',tip:'タ is ク with a little TAble inside.',title:'Ku and Ta',lines:['ク is a KUrious corner.','タ is ク with a little TAble inside it.'],quiz:'k-ta'}]},
+ duck:{name:'Dakuten Duck',color:'#ffd166',accent:'#e4572e',greet:'Quack. I have two little feathers. Watch what they do to sounds.',lessons:[
+  {id:'duck-1',tip:'Two feathers ゛ turn か into が. Ka, ga. Gwack.',title:'Two feathers',lines:['Two feathers ゛ make a sound heavier.','k becomes g, s becomes z, t becomes d, h becomes b.','か becomes が. Ka, ga. Quack, gwack.'],quiz:'d-ga'},
+  {id:'duck-2',tip:'The bubble ゜ turns は into ぱ. POP!',title:'The bubble',lines:['The little circle ゜ only lands on the h-row.','It turns h into p. は becomes ぱ. POP goes the bubble!'],quiz:'d-pa'},
+  {id:'duck-3',tip:'し with feathers is じ: ji, not zi.',title:'Ji and Zu',lines:['し with feathers is じ: ji, not zi.','す with feathers is ず: zu. Quack, not zack.'],quiz:'d-ji'},
+  {id:'duck-4',tip:'Feathers are heavy B, the bubble is light P. ぽ is po.',title:'Heavy or light',lines:['Feathers are heavy: B.','The bubble is light: P.','ぼ is bo, ぽ is po. Do not confuse them or I will honk.'],quiz:'d-po'}]},
+ neko:{name:'Neko Merchant',color:'#f2a541',accent:'#2b2d42',greet:'Welcome, customer. Every word costs one head scratch.',lessons:[
+  {id:'neko-1',tip:'猫 (ねこ) is cat. That is me. Pet me.',title:'Cat',lines:['猫 is read ねこ and means cat.','That is me. Buy something or pet me. Preferably both.'],quiz:'v-neko'},
+  {id:'neko-2',tip:'火 is a person waving their arms by a fire. ひ, hot!',title:'Fire',lines:['火 looks like a person waving their arms beside a fire.','Read ひ. Hot! Hot! Do not pet cats near it.'],quiz:'v-hi'},
+  {id:'neko-3',tip:'山 has three peaks. やま.',title:'Mountain',lines:['山 has three peaks. Read やま.','Even a sleepy cat can see that one.'],quiz:'v-yama'},
+  {id:'neko-4',tip:'力 is an arm flexing. ちから, power.',title:'Power',lines:['力 is an arm flexing. Read ちから, power.','刀 is a sword. Do not mix them up while shopping.'],quiz:'v-chikara'}]},
+ shiba:{name:'Sailor Shiba',color:'#e9b872',accent:'#ffffff',greet:'Woof! I mean: phrases are how real people talk. Woof.',lessons:[
+  {id:'shiba-1',tip:'しまった! Oh no! Like dropping your sushi.',title:'Oops',lines:['しまった! means Oh no!','Say it when you drop your sushi. I say it a lot.'],quiz:'p-shimatta'},
+  {id:'shiba-2',tip:'おかえり is what the one waiting says: welcome back.',title:'Coming home',lines:['You walk in and say ただいま: I’m home.','The one waiting says おかえり: welcome back.','I always wait. Wag wag.'],quiz:'p-okaeri'},
+  {id:'shiba-3',tip:'危ない! Watch out! Something is about to fall.',title:'Danger',lines:['危ない! (あぶない) means Watch out!','In anime, someone shouts it right before something falls from the sky.'],quiz:'p-abunai'},
+  {id:'shiba-4',tip:'まかせて! Leave it to me! Strike a pose.',title:'Hero line',lines:['まかせて! means Leave it to me!','Hero line number one. Practise it in the mirror. With a pose.'],quiz:'p-makasete'}]},
+ tanuki:{name:'Monk Tanuki',color:'#8a6a4f',accent:'#2b2d42',greet:'Japanese grammar is patient. The verb waits at the end, like me at dinner.',lessons:[
+  {id:'tanuki-1',tip:'を marks what the action happens to: パンをたべます.',title:'The object を',lines:['を marks the thing the action happens to.','パンをたべます: I eat bread.','The verb たべます comes last. Always last. Like dessert.'],quiz:'g-wo'},
+  {id:'tanuki-2',tip:'で marks where an action happens: としょかんで.',title:'Where: で or に',lines:['で marks where an action happens: としょかんでべんきょうします.','に marks where you go, or a point in time: がっこうにいきます.'],quiz:'g-de'},
+  {id:'tanuki-3',tip:'の is a bridge between nouns: わたしのほん.',title:'The bridge の',lines:['の joins two nouns, like a little bridge.','わたしのほん: my book. たぬきのおなか: tanuki’s belly.'],quiz:'g-no'},
+  {id:'tanuki-4',tip:'たべたい: 〜たい means want to. I always たべたい.',title:'Wanting 〜たい',lines:['Add たい to a verb stem to say you want to do it.','たべる becomes たべたい: I want to eat.','I am always たべたい.'],quiz:'g-tai'}]}});
+const LESSONS=Object.freeze(Object.values(NPCS).flatMap(n=>n.lessons));
+const TIPS=Object.freeze(Object.fromEntries(Object.entries(NPCS).flatMap(([nid,n])=>n.lessons.map(l=>[l.quiz,{npc:nid,text:l.tip}]))));
+
+/* ===== PURE LOGIC (no DOM) ===== */
+function xpForLevel(l){return 25*l*(l-1);}
+function levelFromXp(xp){let l=1;while(l<CONFIG.MAX_LEVEL&&xp>=xpForLevel(l+1))l++;return l;}
+function heroStats(l){return{maxHp:50+10*(l-1),atk:8+3*(l-1)};}
+function skillsFor(l){return SKILLS.filter(s=>l>=s.level).map(s=>s.id);}
+function rng(seed){let x=(seed>>>0)||1;return()=>{x=(Math.imul(x,1664525)+1013904223)>>>0;return x/4294967296;};}
+function cardsInDecks(decks){return decks?CARDS.filter(c=>decks.includes(c.deck)):CARDS.slice();}
+function getPool(trainDeck){return cardsInDecks(TRAIN_DECKS[trainDeck]===undefined?[trainDeck]:TRAIN_DECKS[trainDeck]);}
+function isWeak(cards,id){const r=cards[id];return !!r&&(r.wrong||0)>(r.correct||0);}
+function weightedPool(decks,cards){const pool=cardsInDecks(decks);return pool.concat(pool.filter(c=>isWeak(cards,c.id)));}
+function buildQueue(trainDeck,mode,length,seed,cards){let pool=getPool(trainDeck);if(mode==='weak'){const weak=pool.filter(c=>isWeak(cards,c.id));if(weak.length)pool=weak.concat(pool);}if(!pool.length)return[];const out=[];let r=0;while(out.length<length)out.push(...seededShuffle(pool,seed+r++));return out.slice(0,length);}
+function answerChoices(card,seed){return seededShuffle([card.answer,...card.alts],seed);}
+function regionById(id){return REGIONS.find(r=>r.id===id)||null;}
+function regionUnlocked(region,level){return !!region&&level>=region.minLevel;}
+function createBattle(region,level,seed,defeats){const st=heroStats(level),m=region.mon;const r=rng(seed);
+ const enraged=CONFIG.FEATURES.enraged&&(defeats||0)>0&&r()<CONFIG.ENRAGE_CHANCE;
+ const hp=enraged?Math.round(m.hp*1.3):m.hp;
+ return{regionId:region.id,monsterId:m.id,enraged,monsterHp:hp,monsterMax:hp,monAtk:m.atk+(enraged?2:0),xp:enraged?Math.round(m.xp*1.5):m.xp,
+  heroHp:st.maxHp,heroMax:st.maxHp,atk:st.atk,level,skills:skillsFor(level),combo:0,usedFocus:false,usedMend:false,wardUp:skillsFor(level).includes('ward'),
+  turn:0,seed:(seed>>>0)||1,cardId:null,answered:false,result:null,last:null};}
+function nextCard(b,cards){const region=regionById(b.regionId);const pool=weightedPool(region.decks,cards);const r=rng(b.seed+b.turn*7919+1)();let c=pool[Math.floor(r*pool.length)];if(pool.length>1&&c.id===b.cardId)c=pool.find(x=>x.id!==b.cardId);b.cardId=c.id;b.answered=false;return c;}
+function resolveAnswer(b,isCorrect){if(b.result||b.answered)return b;b.answered=true;b.turn++;
+ if(isCorrect){b.combo++;const dmg=b.skills.includes('combo')&&b.combo>=3?b.atk*2:b.atk;b.monsterHp=Math.max(0,b.monsterHp-dmg);b.last={to:'monster',amount:dmg,crit:dmg>b.atk};}
+ else{b.combo=0;if(b.wardUp){b.wardUp=false;b.last={to:'hero',amount:0,blocked:true};}else{const dmg=b.skills.includes('guard')?Math.round(b.monAtk*0.7):b.monAtk;b.heroHp=Math.max(0,b.heroHp-dmg);b.last={to:'hero',amount:dmg};}}
+ if(b.monsterHp===0)b.result='win';else if(b.heroHp===0)b.result='lose';return b;}
+function useMend(b){if(!b.skills.includes('mend')||b.usedMend||b.result)return false;b.usedMend=true;b.heroHp=Math.min(b.heroMax,b.heroHp+Math.ceil(b.heroMax*0.4));return true;}
+function canFocus(b){return b.skills.includes('focus')&&!b.usedFocus&&!b.result&&!b.answered;}
+function battleReward(b){return b.result==='win'?b.xp:b.result==='lose'?5:0;}
+function createDefaultProgress(){return{version:CONFIG.DATA_VERSION,xp:0,streak:0,lastPlayed:'',cards:{},history:[],defeats:{},lessons:{},region:'meadow'};}
+function cleanCards(c){const out={};if(!c||typeof c!=='object'||Array.isArray(c))return out;for(const k of Object.keys(c)){if(!CARD_BY_ID[k])continue;const r=c[k];if(r&&typeof r==='object'){const cr=Number(r.correct),wr=Number(r.wrong);out[k]={correct:Number.isFinite(cr)&&cr>0?Math.floor(cr):0,wrong:Number.isFinite(wr)&&wr>0?Math.floor(wr):0};}}return out;}
+function safeParseProgress(raw){if(!raw)return createDefaultProgress();try{const v=JSON.parse(raw);if(!v||typeof v!=='object'||![1,2,3].includes(v.version))return createDefaultProgress();if(typeof v.xp!=='number'||!Number.isFinite(v.xp))return createDefaultProgress();
+ const defeats={};if(v.version>=2&&v.defeats&&typeof v.defeats==='object')for(const r of REGIONS){const n=Number(v.defeats[r.mon.id]);if(Number.isFinite(n)&&n>0)defeats[r.mon.id]=Math.floor(n);}
+ const lessons={};if(v.version>=3&&v.lessons&&typeof v.lessons==='object')for(const l of LESSONS)if(v.lessons[l.id]===true)lessons[l.id]=true;
+ const s=Number(v.streak);const region=v.version>=3&&regionById(v.region)?v.region:'meadow';
+ const history=Array.isArray(v.history)?v.history.filter(h=>h&&typeof h==='object'&&typeof h.id==='string').slice(-CONFIG.MAX_HISTORY):[];
+ return{version:CONFIG.DATA_VERSION,xp:Math.max(0,Math.floor(v.xp)),streak:Number.isFinite(s)&&s>0?Math.floor(s):0,lastPlayed:typeof v.lastPlayed==='string'?v.lastPlayed:'',cards:cleanCards(v.cards),history,defeats,lessons,region};}catch(_){return createDefaultProgress();}}
+function updateStreak(p,today){if(p.lastPlayed===today)return p.streak;const d=new Date(today+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-1);p.streak=p.lastPlayed===d.toISOString().slice(0,10)?p.streak+1:1;p.lastPlayed=today;return p.streak;}
+function recordCard(p,cardId,ok,today){const r=p.cards[cardId]||{correct:0,wrong:0};ok?r.correct++:r.wrong++;p.cards[cardId]=r;p.history.push({id:cardId,ok,date:today});if(p.history.length>CONFIG.MAX_HISTORY)p.history=p.history.slice(-CONFIG.MAX_HISTORY);updateStreak(p,today);}
+function addXp(p,amount){const before=levelFromXp(p.xp);p.xp+=amount;const after=levelFromXp(p.xp);return{before,after,levelUp:after>before};}
+function completeLesson(p,lessonId){if(!LESSONS.some(l=>l.id===lessonId)||p.lessons[lessonId])return 0;p.lessons[lessonId]=true;return CONFIG.LESSON_XP;}
+function npcHasNew(p,npcId){const n=NPCS[npcId];return !!n&&n.lessons.some(l=>!p.lessons[l.id]);}
+function unlocksBetween(before,after){return{skills:SKILLS.filter(s=>s.level>before&&s.level<=after).map(s=>s.name),regions:REGIONS.filter(r=>r.minLevel>before&&r.minLevel<=after).map(r=>r.name)};}
+
+/* ===== MANGA ART (original characters; constant strings and numbers only, never user text) ===== */
+const INK='#1b1b2f';
+function ink(w){return `stroke="${INK}" stroke-width="${w||2}" stroke-linejoin="round" stroke-linecap="round"`;}
+function heroLook(l){const t=l>=11?4:l>=8?3:l>=5?2:l>=3?1:0;
+ return{tier:t,shirt:['#f4f4f4','#2f4b8f','#f7f7f7','#2a3350','#f4f1ea'][t],pants:['#3b4a6b','#23305a','#2a2f45','#1b1b2f','#c9d3ea'][t],
+  hair:t===4?'#e4ebff':'#2b2440',eyes:t===4?'#38b6ff':'#4a6fd1',scarf:t>=1?(t===4?'#7fb8ff':'#d7263d'):null,band:t>=2?'#d7263d':null,
+  coat:t>=3?(t===4?'#f4f1ea':'#1f2a44'):null,weapon:t<=1?'brush':t===2?'blade':'katana',aura:t===4};}
+function heroSvg(level,x,y,s){const L=heroLook(level);let g=`<g class="hero t${L.tier}" transform="translate(${x},${y}) scale(${s})">`;
+ if(L.aura)g+=`<path class="aura" d="M-26,2 Q-34,-50 -16,-96 Q0,-106 16,-96 Q34,-50 26,2Z" fill="#7fb8ff" fill-opacity=".28" stroke="#7fb8ff" stroke-width="3"/>`;
+ g+=`<ellipse cx="0" cy="1" rx="16" ry="3.5" fill="${INK}" fill-opacity=".25"/>`;
+ if(L.scarf)g+=`<path class="scarf" d="M-6,-53 Q-20,-58 -34,-50 Q-26,-47 -36,-41 Q-20,-43 -6,-49Z" fill="${L.scarf}" ${ink(1.8)}/>`;
+ if(L.coat)g+=`<path d="M-13,-52 L-19,-6 L-4,-8 L0,-30 L4,-8 L19,-6 L13,-52Z" fill="${L.coat}" ${ink(2)}/>`;
+ if(L.weapon==='katana')g+=`<path d="M-14,-24 L22,-82" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/><path d="M-14,-24 L22,-82" stroke="#dfe6f2" stroke-width="2.4" stroke-linecap="round"/><path d="M-10,-34 l6,4" stroke="#ffd166" stroke-width="3"/>`;
+ g+=`<path d="M-9,-31 L-11,-2 L-3,-2 L-1,-19 L1,-19 L3,-2 L11,-2 L9,-31Z" fill="${L.pants}" ${ink(2)}/><path d="M-12,-3 h9 v3 h-10z M3,-3 h9 l1,3 h-10z" fill="${INK}"/>`;
+ g+=`<path d="M-12,-53 Q-14,-41 -10,-30 L10,-30 Q14,-41 12,-53 Q0,-57 -12,-53Z" fill="${L.shirt}" ${ink(2)}/><path d="M3,-54 Q12,-52 12,-45 L10,-31 L5,-31Z" fill="${INK}" fill-opacity=".14"/>`;
+ if(L.tier===2)g+=`<path d="M-11,-36 L11,-36" stroke="${INK}" stroke-width="3"/>`;
+ g+=`<path d="M7,-49 L19,-40 L16,-36 L5,-44Z" fill="${L.shirt}" ${ink(1.8)}/><circle cx="19" cy="-38" r="3.4" fill="#ffe0c8" ${ink(1.6)}/>`;
+ if(L.weapon==='brush')g+=`<path d="M15,-30 L26,-52" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><path d="M26,-52 l3,-6" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>`;
+ if(L.weapon==='blade')g+=`<path d="M15,-31 L32,-64" stroke="${INK}" stroke-width="4" stroke-linecap="round"/><path d="M16,-33 L32,-64" stroke="#e8eef8" stroke-width="2" stroke-linecap="round"/><path d="M13,-36 l7,4" stroke="${INK}" stroke-width="3"/>`;
+ g+=`<rect x="-2.5" y="-58" width="6" height="5" fill="#ffe0c8"/><path d="M-10,-70 Q-11,-58 -2,-55 Q6,-53 11,-59 Q14,-65 12,-72 Q0,-76 -10,-70Z" fill="#ffe0c8" ${ink(2)}/>`;
+ if(L.scarf)g+=`<path d="M-8,-56 Q2,-52 10,-56 L10,-51 Q0,-47 -8,-51Z" fill="${L.scarf}" ${ink(1.6)}/>`;
+ g+=`<path d="M2,-68 L11,-69 L10,-62 Q6,-60.5 2.5,-62.5Z" fill="#fff" ${ink(1.4)}/><ellipse cx="7" cy="-65.2" rx="2.4" ry="3.2" fill="${L.eyes}"/><ellipse cx="7.2" cy="-64.8" rx="1.1" ry="1.8" fill="${INK}"/><circle cx="8" cy="-66.6" r=".9" fill="#fff"/>`;
+ g+=`<path d="M-5,-67 L-0.5,-68 L-0.5,-62.5 Q-3,-61.5 -5,-62.5Z" fill="#fff" ${ink(1.2)}/><ellipse cx="-2.6" cy="-64.8" rx="1.4" ry="2.4" fill="${L.eyes}"/>`;
+ g+=`<path d="M1.5,-70.5 L11.5,-72.5 M-6,-69.5 L-1,-71" stroke="${INK}" stroke-width="2" stroke-linecap="round"/><path d="M5,-57.5 L9.5,-58.5" stroke="${INK}" stroke-width="1.5" stroke-linecap="round"/>`;
+ g+=`<path d="M-12,-60 L-21,-66 L-13,-70 L-20,-81 L-8,-79 L-6,-92 L3,-82 L12,-90 L12,-78 L21,-79 L15,-70 L13,-68 L9,-73 L5,-69 L1,-73 L-3,-67 L-7,-69 L-10,-64Z" fill="${L.hair}" ${ink(2)}/><path d="M-4,-86 L0,-80 M6,-84 L8,-78" stroke="#fff" stroke-opacity=".55" stroke-width="1.5"/>`;
+ if(L.band)g+=`<path d="M-11,-72 L12,-74.5 L12.5,-71 L-11,-68.5Z" fill="${L.band}" ${ink(1.5)}/><path class="scarf" d="M-11,-71 L-24,-76 L-21,-71 L-26,-66 L-11,-69Z" fill="${L.band}" ${ink(1.5)}/>`;
+ return g+'</g>';}
+function mEye(cx,cy,f,rage){return `<path d="M${cx-6*f},${cy-3.5} L${cx+6*f},${cy} Q${cx+1*f},${cy+4.5} ${cx-6*f},${cy+1}Z" fill="${rage?'#ffd0d0':'#fff'}" ${ink(1.6)}/><ellipse cx="${cx+0.5*f}" cy="${cy+0.8}" rx="1.3" ry="2.6" fill="${rage?'#d7263d':INK}"/>`;}
+function vein(x,y){return `<g class="vein" stroke="#e0102f" stroke-width="2.2" fill="none" stroke-linecap="round"><path d="M${x-5},${y-2} q3,-1 3,-4"/><path d="M${x+5},${y-2} q-3,-1 -3,-4"/><path d="M${x-5},${y+2} q3,1 3,4"/><path d="M${x+5},${y+2} q-3,1 -3,4"/></g>`;}
+const CLOSEUP=Object.freeze({blob:'-26 -46 52 40',wisp:'-24 -56 48 40',shard:'-24 -66 48 40',beetle:'4 -40 44 34',mimic:'-28 -64 56 42',oni:'-26 -72 52 44',golem:'-26 -80 52 40',tower:'-26 -82 52 40'});
+function monsterSvg(mon,x,y,s,rage){const c=mon.color;let g=`<g class="mon ${mon.shape}" transform="translate(${x},${y}) scale(${s})"><ellipse cx="0" cy="1" rx="24" ry="4" fill="${INK}" fill-opacity=".25"/>`;
+ const R=(w,h)=>rage?`<ellipse class="rage" cx="0" cy="${-h/2}" rx="${w}" ry="${h/2+8}" fill="#ff3b3b" fill-opacity=".22"/>`:'';
+ const V=(vx,vy)=>rage?vein(vx,vy):'';const glow=rage?'#ff4d4d':'#7fe3ff';
+ switch(mon.shape){
+ case'blob':g+=R(34,48)+`<path d="M-28,0 Q-31,-30 -8,-40 Q0,-47 8,-40 Q31,-30 28,0 Q21,-6 14,0 Q7,-7 0,0 Q-7,-7 -14,0 Q-21,-6 -28,0Z" fill="${c}" ${ink(2.2)}/><ellipse cx="-13" cy="-30" rx="6" ry="3" fill="#fff" fill-opacity=".6" transform="rotate(-25 -13 -30)"/>`+mEye(-10,-22,1,rage)+mEye(9,-22,-1,rage)+`<path d="M-7,-11 Q0,-7 7,-11" fill="none" ${ink(1.8)}/><path d="M2,-10 L3.5,-6 L5,-10.5Z" fill="#fff" ${ink(1)}/>`+V(18,-36);break;
+ case'wisp':g+=R(30,74)+`<path d="M0,-74 Q9,-58 18,-52 Q29,-35 19,-19 Q23,-8 12,0 Q5,-6 0,0 Q-6,-6 -12,0 Q-23,-8 -19,-20 Q-29,-37 -14,-52 Q-6,-56 0,-74Z" fill="${c}" ${ink(2.2)}/><path d="M0,-56 Q8,-44 10,-30 Q0,-20 -10,-30 Q-8,-44 0,-56Z" fill="#bfe3ff" fill-opacity=".7"/>`+mEye(-8,-36,1,rage)+mEye(8,-36,-1,rage)+`<path d="M-5,-24 Q0,-20 5,-24" fill="none" ${ink(1.6)}/>`+V(16,-58);break;
+ case'shard':g+=R(34,84)+`<polygon points="-18,-40 -33,-58 -22,-28" fill="${c}" ${ink(2)}/><polygon points="18,-40 33,-62 22,-28" fill="${c}" ${ink(2)}/><polygon points="0,-82 18,-40 12,0 -12,0 -18,-40" fill="${c}" ${ink(2.2)}/><polygon points="0,-82 18,-40 4,-36" fill="#fff" fill-opacity=".35"/><polygon points="-12,0 -18,-40 -6,-30" fill="${INK}" fill-opacity=".18"/>`+mEye(-7,-46,1,rage)+mEye(7,-46,-1,rage)+`<path d="M-6,-32 L-3,-29 L0,-32 L3,-29 L6,-32" fill="none" ${ink(1.6)}/>`+V(14,-66);break;
+ case'beetle':g+=R(40,60)+`<path d="M-20,-6 L-27,1 M-6,-6 L-10,1 M10,-6 L8,1 M20,-6 L25,1" ${ink(2.4)}/><path d="M-31,-6 Q-33,-36 0,-40 Q31,-36 31,-6Z" fill="${c}" ${ink(2.2)}/><path d="M0,-40 L0,-6" ${ink(2)}/><path d="M-13,-31 l4,7 M-5,-33 l4,7" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M32,-22 Q46,-42 35,-62 Q42,-42 27,-24Z" fill="#5a3412" ${ink(2)}/><circle cx="29" cy="-15" r="10" fill="#5a3412" ${ink(2)}/>`+mEye(31,-17,-1,rage)+V(-20,-44);break;
+ case'mimic':g+=R(38,70)+`<polygon points="-28,-30 28,-30 25,-58 -30,-50" fill="#2a0a0a" ${ink(2)}/><polygon points="-26,-30 -22,-36 -18,-30 -14,-36 -10,-30 -6,-36 -2,-30 2,-36 6,-30 10,-36 14,-30 18,-36 22,-30" fill="#fff" ${ink(1)}/><polygon points="-28,-50 -24,-44 -20,-51 -16,-45 -12,-52 -8,-46 -4,-53 0,-47 4,-54 8,-48 12,-55 16,-49 20,-56 24,-50 25,-57" fill="#fff" ${ink(1)}/><rect x="-28" y="-30" width="56" height="30" fill="${c}" ${ink(2.2)}/><rect x="-28" y="-30" width="56" height="6" fill="#8c4a35" ${ink(1.5)}/><rect x="-4" y="-21" width="8" height="10" fill="#ffd166" ${ink(1.5)}/><path d="M-16,-30 Q-14,-10 -4,-16 Q-6,-26 -8,-30Z" fill="#e8475f" ${ink(1.5)}/><polygon points="-30,-50 25,-58 27,-68 -29,-61" fill="${c}" ${ink(2.2)}/><circle cx="-11" cy="-41" r="3.2" fill="${rage?'#ff4d4d':'#ffd166'}"/><circle cx="9" cy="-44" r="3.2" fill="${rage?'#ff4d4d':'#ffd166'}"/>`+V(20,-72);break;
+ case'oni':g+=R(36,90)+`<path d="M-24,-56 L-30,-70 L-20,-66 L-22,-80 L-10,-70 L0,-82 L10,-70 L22,-80 L20,-66 L30,-70 L24,-56Z" fill="#2b2440" ${ink(2)}/><path d="M-20,0 L-24,-30 Q0,-38 24,-30 L20,0Z" fill="${c}" ${ink(2.2)}/><path d="M-21,-12 L21,-12 L19,0 L-19,0Z" fill="#ffd166" ${ink(1.8)}/><path d="M-12,-12 l3,12 M0,-12 l3,12 M12,-12 l3,12" stroke="${INK}" stroke-width="2.5"/><path d="M-20,-34 Q-24,-64 0,-68 Q24,-64 20,-34 Q0,-27 -20,-34Z" fill="${c}" ${ink(2.2)}/><polygon points="-14,-62 -21,-86 -6,-66" fill="#fff6e0" ${ink(1.8)}/><polygon points="14,-62 21,-86 6,-66" fill="#fff6e0" ${ink(1.8)}/><path d="M-15,-56 L-4,-51 M15,-56 L4,-51" stroke="${INK}" stroke-width="3.2" stroke-linecap="round"/>`+mEye(-9,-47,1,rage)+mEye(9,-47,-1,rage)+`<path d="M-10,-40 L10,-40 L8,-35 L-8,-35Z" fill="#2a0a0a" ${ink(1.5)}/><path d="M-7,-35 L-5,-39 L-3,-35Z M3,-35 L5,-39 L7,-35Z" fill="#fff" ${ink(1)}/>`+V(22,-66);break;
+ case'golem':g+=R(46,74)+`<rect x="-43" y="-44" width="13" height="34" fill="#5f6677" ${ink(2)}/><rect x="30" y="-44" width="13" height="34" fill="#5f6677" ${ink(2)}/><rect x="-45" y="-14" width="17" height="12" fill="#4b5161" ${ink(2)}/><rect x="28" y="-14" width="17" height="12" fill="#4b5161" ${ink(2)}/><path d="M-30,0 L-26,-46 L26,-46 L30,0Z" fill="${c}" ${ink(2.2)}/><path d="M-18,-46 L-12,-30 L-20,-20 M14,-46 L18,-36 M22,-10 L14,-4" fill="none" stroke="${INK}" stroke-width="1.4"/><text x="0" y="-12" text-anchor="middle" font-size="22" font-weight="900" fill="${glow}" stroke="${INK}" stroke-width=".8">文</text><rect x="-16" y="-70" width="32" height="24" fill="#5f6677" ${ink(2.2)}/><rect x="-11" y="-62" width="8" height="3.5" fill="${glow}"/><rect x="3" y="-62" width="8" height="3.5" fill="${glow}"/>`+V(22,-70);break;
+ default:g+=R(34,108)+`<path d="M-26,0 L-22,-40 L22,-40 L26,0Z" fill="${c}" ${ink(2.2)}/><path d="M-7,0 v-15 a7,7 0 0 1 14,0 v15z" fill="#e8475f" fill-opacity=".85" ${ink(1.5)}/><path d="M-18,-40 L-14,-80 L14,-80 L18,-40Z" fill="#3d4060" ${ink(2.2)}/><polygon points="-17,-80 0,-108 17,-80" fill="${c}" ${ink(2.2)}/><path d="M-30,-60 L-20,-60 M20,-60 L30,-60 M-26,-74 L-18,-68 M26,-74 L18,-68 M-26,-46 L-18,-52 M26,-46 L18,-52" stroke="${glow}" stroke-width="2" stroke-linecap="round"/><ellipse cx="0" cy="-60" rx="11" ry="7.5" fill="#fff" ${ink(2)}/><ellipse cx="0" cy="-60" rx="3.2" ry="6.5" fill="${rage?'#d7263d':'#7b2cbf'}"/><circle cx="1.5" cy="-62.5" r="1.3" fill="#fff"/>`+V(20,-92);}
+ return g+'</g>';}
+function platform(x,y,w,top){top=top||'#ffffff';return`<polygon points="${x-w},${y} ${x},${y-w/3} ${x+w},${y} ${x},${y+w/3}" fill="${top}" ${ink(2)}/><polygon points="${x-w},${y} ${x},${y+w/3} ${x},${y+w/3+10} ${x-w},${y+10}" fill="#d9d4e6" ${ink(2)}/><polygon points="${x+w},${y} ${x},${y+w/3} ${x},${y+w/3+10} ${x+w},${y+10}" fill="#b9b3cc" ${ink(2)}/>`;}
+function cEyes(x1,x2,y){return [x1,x2].map(x=>`<ellipse cx="${x}" cy="${y}" rx="3.2" ry="4.3" fill="${INK}"/><circle cx="${x+1.1}" cy="${y-1.7}" r="1.4" fill="#fff"/><circle cx="${x-1}" cy="${y+1.6}" r=".7" fill="#fff"/>`).join('');}
+function blush(x1,x2,y){return `<ellipse cx="${x1}" cy="${y}" rx="4" ry="2" fill="#ff7a9a" fill-opacity=".55"/><ellipse cx="${x2}" cy="${y}" rx="4" ry="2" fill="#ff7a9a" fill-opacity=".55"/>`;}
+function npcSvg(id,x,y,s){const n=NPCS[id];if(!n)return'';const c=n.color,a=n.accent;let g=`<g class="npc ${id}" transform="translate(${x},${y}) scale(${s})"><ellipse cx="0" cy="1" rx="20" ry="3.5" fill="${INK}" fill-opacity=".22"/>`;
+ switch(id){
+ case'mochi':g+=`<path d="M22,-12 L34,-34" stroke="#8a5a2b" stroke-width="2.5" stroke-linecap="round"/><path d="M-26,0 Q-30,-36 0,-40 Q30,-36 26,0Z" fill="${c}" ${ink(2)}/>`+cEyes(-9,9,-20)+`<circle cx="-9" cy="-20" r="7" fill="none" ${ink(1.6)}/><circle cx="9" cy="-20" r="7" fill="none" ${ink(1.6)}/><path d="M-2,-20 L2,-20" ${ink(1.6)}/>`+blush(-18,18,-11)+`<path d="M-4,-9 q2,2 4,0 q2,2 4,0" fill="none" ${ink(1.5)}/>`;break;
+ case'kappa':g+=`<path d="M-14,0 L-12,-18 L12,-18 L14,0Z" fill="${c}" ${ink(2)}/><circle cx="0" cy="-30" r="17" fill="${c}" ${ink(2)}/><path d="M-17,-38 L-12,-46 L-6,-40 L0,-48 L6,-40 L12,-46 L17,-38" fill="#2f6b3a" ${ink(1.6)}/><ellipse cx="0" cy="-47" rx="12" ry="4" fill="#fff" ${ink(1.6)}/><ellipse cx="0" cy="-47.5" rx="8" ry="2.2" fill="${a}"/>`+cEyes(-7,7,-31)+`<path d="M-5,-21 Q0,-17 5,-21 L0,-24Z" fill="#f2a541" ${ink(1.5)}/>`+blush(-12,12,-24);break;
+ case'origami':g+=`<polygon points="-24,-2 -40,-26 -14,-12" fill="${a}" ${ink(1.6)}/><polygon points="24,-2 38,-22 14,-12" fill="${a}" ${ink(1.6)}/><polygon points="0,-58 24,-2 -24,-2" fill="${c}" ${ink(2)}/><polygon points="0,-58 24,-2 0,-14" fill="#e9e3f7" ${ink(1.2)}/>`+cEyes(-6,6,-26)+`<circle cx="6" cy="-26" r="6" fill="none" stroke="#c9a227" stroke-width="1.6"/><path d="M12,-26 Q16,-18 14,-10" fill="none" stroke="#c9a227" stroke-width="1"/><path d="M-3,-16 q3,2 6,0" fill="none" ${ink(1.4)}/>`;break;
+ case'duck':g+=`<ellipse cx="0" cy="-12" rx="18" ry="12" fill="${c}" ${ink(2)}/><circle cx="2" cy="-32" r="15" fill="${c}" ${ink(2)}/><path d="M-4,-46 l-3,-9 M2,-47 l0,-10" stroke="${INK}" stroke-width="3.2" stroke-linecap="round"/><path d="M15,-31 L30,-28 L15,-23Z" fill="${a}" ${ink(1.6)}/><rect x="-8" y="-38" width="20" height="7" rx="2" fill="${INK}"/><path d="M-8,-36 L-14,-38" ${ink(1.6)}/><path d="M7,-37 l3,0" stroke="#fff" stroke-width="1.4"/>`+blush(-6,10,-26);break;
+ case'neko':g+=`<path d="M-16,0 L-14,-20 L14,-20 L16,0Z" fill="${c}" ${ink(2)}/><path d="M14,-18 L22,-34 L28,-30 L20,-16Z" fill="${c}" ${ink(1.8)}/><circle cx="25" cy="-34" r="5" fill="#fff" ${ink(1.6)}/><path d="M-20,-30 L-16,-52 L-6,-42 L6,-42 L16,-52 L20,-30 Q20,-16 0,-16 Q-20,-16 -20,-30Z" fill="${c}" ${ink(2)}/><path d="M-14,-46 L-15,-50 L-11,-45Z M14,-46 L15,-50 L11,-45Z" fill="#ffb3c1"/>`+cEyes(-7,7,-30)+`<path d="M-4,-23 q2,2 4,0 q2,2 4,0" fill="none" ${ink(1.4)}/><path d="M-20,-26 l-8,-1 M-20,-23 l-8,2 M20,-26 l8,-1 M20,-23 l8,2" ${ink(1.2)}/><circle cx="0" cy="-10" r="5" fill="#ffd166" ${ink(1.5)}/>`+blush(-13,13,-24);break;
+ case'shiba':g+=`<path d="M-16,0 L-14,-20 L14,-20 L16,0Z" fill="${c}" ${ink(2)}/><path d="M-8,-20 L0,-10 L8,-20Z" fill="#2b59c3" ${ink(1.4)}/><path d="M-20,-30 L-15,-50 L-6,-42 L6,-42 L15,-50 L20,-30 Q20,-15 0,-15 Q-20,-15 -20,-30Z" fill="${c}" ${ink(2)}/><path d="M-12,-26 Q0,-14 12,-26 Q8,-18 0,-17 Q-8,-18 -12,-26Z" fill="#fff"/><ellipse cx="0" cy="-49" rx="13" ry="4" fill="#fff" ${ink(1.6)}/><rect x="-9" y="-56" width="18" height="7" fill="#fff" ${ink(1.6)}/><rect x="-9" y="-52" width="18" height="2" fill="#2b59c3"/>`+cEyes(-7,7,-32)+`<ellipse cx="0" cy="-24" rx="2.6" ry="1.8" fill="${INK}"/><path d="M0,-22 v2 M-3,-19 q3,2 6,0" fill="none" ${ink(1.3)}/>`+blush(-14,14,-26);break;
+ case'tanuki':g+=`<path d="M-18,0 Q-22,-22 0,-24 Q22,-22 18,0Z" fill="${c}" ${ink(2)}/><ellipse cx="0" cy="-8" rx="10" ry="8" fill="#d8b894"/><path d="M-14,-18 Q0,-10 14,-18" fill="none" stroke="#7a1f1f" stroke-width="3" stroke-dasharray="2 2"/><circle cx="0" cy="-36" r="16" fill="${c}" ${ink(2)}/><path d="M-14,-46 L-12,-56 L-5,-50Z M14,-46 L12,-56 L5,-50Z" fill="${c}" ${ink(1.6)}/><path d="M-14,-38 Q-7,-45 -1,-38 Q-7,-31 -14,-38Z M14,-38 Q7,-45 1,-38 Q7,-31 14,-38Z" fill="#5a4030"/>`+cEyes(-7,7,-38)+`<ellipse cx="0" cy="-29" rx="2.5" ry="1.8" fill="${INK}"/><path d="M-2,-56 Q4,-64 10,-58 Q4,-54 -2,-56Z" fill="#6bbf59" ${ink(1.2)}/>`;break;}
+ return g+'</g>';}
+
+/* ===== DRAMA: original dialogue, Japanese + English (constant text only) ===== */
+const HERO_NAME='Kai';
+const LN=(ja,en)=>Object.freeze({ja,en});
+const DRAMA=Object.freeze({
+ hero:Object.freeze({
+  intro:[LN('いくぞ!','Here I go!'),LN('かかってこい!','Bring it on!'),LN('負けない!','I won’t lose!')],
+  hit:[LN('くらえ!','Take this!'),LN('そこだ!','There!'),LN('見えた!','I see it!'),LN('まだまだ!','I’m just getting started!')],
+  combo:[LN('ひっさつ… 言葉斬り!','Special move… Word Slash!'),LN('ひっさつ… かな旋風!','Special move… Kana Cyclone!')],
+  hurt:[LN('くっ…!','Ugh…!'),LN('しまった!','Oh no!')],
+  low:[LN('まだだ… まだ終わらない!','Not yet… it’s not over!'),LN('ここで倒れるわけには…!','I can’t fall here…!')],
+  win:[LN('勝った!','I won!'),LN('よし!','Alright!')],
+  lose:[LN('くそっ… 次は負けない!','Damn… next time I won’t lose!')],
+  ward:[LN('効かない!','That won’t work on me!')]}),
+ angry:LN('またおまえか!','YOU again!'),
+ mon:Object.freeze({
+  blob:{title:'Devourer of Vowels',intro:[LN('ぷるぷる… ひらがな、いただきます!','Wobble wobble… I’ll gladly eat your hiragana!')],taunt:[LN('おそい!','Too slow!'),LN('ぷるっ!','Blorp!')],defeat:LN('ぷる… ぷる…','Wobble… I’m melting…')},
+  wisp:{title:'Lantern of Lost Loops',intro:[LN('ふふふ… 川へようこそ。','Heh heh… welcome to the river.')],taunt:[LN('ふふふ…','Heh heh heh…'),LN('こっちだよ。','Over here.')],defeat:LN('きえる…','I’m fading…')},
+  shard:{title:'The Sharp-Edged',intro:[LN('カタカナは かたいぞ!','Katakana is hard as stone!')],taunt:[LN('ハハハ!','Ha ha ha!'),LN('ヨワイ!','Weak!')],defeat:LN('ワレタ…','I… shattered…')},
+  beetle:{title:'Lord of Two Feathers',intro:[LN('ブンブン! てんてんの ちからを みよ!','Buzz buzz! Behold the power of the ten-ten!')],taunt:[LN('ブーン!','Bzzzt!')],defeat:LN('ブ… ブン…','B… buzz…')},
+  mimic:{title:'The Hungry Bargain',intro:[LN('いらっしゃい… おまえが しょうひんだ!','Welcome… YOU are the merchandise!')],taunt:[LN('まいど!','Thanks for your business!')],defeat:LN('へいてん…','Shop… closed…')},
+  oni:{title:'Thunder of a Thousand Phrases',intro:[LN('ガハハ! おれさまに かてるか?','Gahaha! You think you can beat me?')],taunt:[LN('よわい!','Weak!'),LN('ガハハ!','Gahaha!')],defeat:LN('お… おぼえてろ!','You… you’ll pay for this!')},
+  golem:{title:'Keeper of Particles',intro:[LN('ここは とおさない。','None shall pass here.')],taunt:[LN('ぶんぽうは ぜったいだ。','Grammar is absolute.')],defeat:LN('ぶんぽう… みごと…','Your grammar… is splendid…')},
+  tower:{title:'The Silence Before Words',intro:[LN('ことばを すべて わすれろ。','Forget all your words.')],taunt:[LN('むだだ。','It’s useless.')],defeat:LN('ことばが… もどる…','The words… return…')}})});
+const SFX=Object.freeze({hit:['ドン!','バキッ!','ズバッ!'],crit:'ズドーン!!',hurt:['ガッ!','ドカッ!'],block:'キン!',heal:'キラッ'});
+function pickLine(list,seed){if(!Array.isArray(list)||!list.length)return null;return list[Math.floor(rng(seed)()*list.length)];}
+function lineText(l){return l?`${l.ja} (${l.en})`:'';}
+
+/* ===== STATE & BROWSER GUARDS ===== */
+const state={view:'home',deck:'hiragana',mode:'normal',queue:[],index:0,correct:0,answered:false,progress:createDefaultProgress(),battle:null,lesson:null,npc:null,errors:[],toastTimer:null,fxTimers:new Set()};
+const $=id=>document.getElementById(id);
+const SVGNS='http://www.w3.org/2000/svg';
+function reduceMotion(){if(!CONFIG.FEATURES.animations)return true;try{return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);}catch(_){return false;}}
+function reportError(msg,err){state.errors.push(String(err&&err.message||err||msg));const b=$('errorBanner');if(b){b.textContent=msg;b.classList.remove('hidden');}}
+function safeLoad(){if(!CONFIG.FEATURES.localProgress)return createDefaultProgress();try{return safeParseProgress(localStorage.getItem(CONFIG.STORAGE_KEY));}catch(e){reportError('Progress could not be loaded. This session continues without saving.',e);return createDefaultProgress();}}
+let saveWarned=false;
+function safeSave(){if(!CONFIG.FEATURES.localProgress)return false;try{localStorage.setItem(CONFIG.STORAGE_KEY,JSON.stringify(state.progress));return true;}catch(e){if(!saveWarned){saveWarned=true;reportError('Progress could not be saved. You can keep playing.',e);}return false;}}
+function today(){return new Date().toISOString().slice(0,10);}
+function later(fn,ms){const t=setTimeout(()=>{state.fxTimers.delete(t);guard(fn);},ms);state.fxTimers.add(t);return t;}
+function clearFx(){for(const t of state.fxTimers)clearTimeout(t);state.fxTimers.clear();sparkTimer=null;cutTimer=null;const c=$('cutIn');if(c)c.classList.add('hidden');const f=$('floaters');if(f)f.replaceChildren();}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>t.classList.add('hidden'),4000);}
+function showView(name){state.view=name;document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===name+'View'));try{window.scrollTo(0,0);}catch(_){}}
+function level(){return levelFromXp(state.progress.xp);}
+function levelUpToast(r){if(!r.levelUp)return;const u=unlocksBetween(r.before,r.after);toast(`Level up! You are now level ${r.after}.`+(u.skills.length?` New skill: ${u.skills.join(', ')}.`:'')+(u.regions.length?` New region: ${u.regions.join(', ')}.`:''));}
+function setPrompt(el,text){el.textContent=text;el.classList.toggle('long',text.length>5);}
+function makeChoice(container,text,handler){const btn=document.createElement('button');btn.type='button';btn.className='choice';btn.textContent=text;btn.addEventListener('click',()=>guard(()=>handler(btn,text)));container.appendChild(btn);return btn;}
+function npcForCard(card){const r=REGIONS.find(x=>x.decks&&x.decks.includes(card.deck));return r?r.npc:null;}
+
+/* ===== HOME ===== */
+function renderHeader(){const p=state.progress;$('lvl').textContent=String(level());$('xp').textContent=String(p.xp);$('streak').textContent=String(p.streak);}
+function renderHome(){const p=state.progress,l=level(),st=heroStats(l);
+ $('heroArt').innerHTML=platform(100,116,64)+`<g class="bob">${heroSvg(l,100,112,1)}</g>`;
+ $('heroTitle').textContent=`${HERO_NAME} · ${TITLES[l]} · Level ${l}`;
+ const next=l>=CONFIG.MAX_LEVEL?null:xpForLevel(l+1),cur=xpForLevel(l);
+ $('xpLabel').textContent=next===null?'Max level reached':`${p.xp-cur} / ${next-cur} XP to level ${l+1}`;
+ $('statLabel').textContent=`HP ${st.maxHp} · ATK ${st.atk}`;
+ $('xpFill').style.width=next===null?'100%':`${Math.min(100,(p.xp-cur)/(next-cur)*100)}%`;
+ const ul=$('skillList');ul.replaceChildren();for(const s of SKILLS){const li=document.createElement('li');const on=l>=s.level;li.className=on?'':'locked';const d=document.createElement('span');d.className='dot';const t=document.createElement('span');t.textContent=on?`${s.name}: ${s.desc}`:`${s.name} (unlocks at level ${s.level})`;li.append(d,t);ul.appendChild(li);}
+ const seen=CARDS.filter(c=>p.cards[c.id]).length,lessons=LESSONS.filter(x=>p.lessons[x.id]).length;
+ $('learnedLabel').textContent=`Cards seen: ${seen} / ${CARDS.length} · Teacher lessons: ${lessons} / ${LESSONS.length}`;
+ $('adventureBtn').classList.toggle('hidden',!CONFIG.FEATURES.rpg);$('practiceBtn').classList.toggle('hidden',!CONFIG.FEATURES.weakPractice);renderHeader();}
+
+/* ===== WORLD MAP ===== */
+function starPts(cx,cy,R){const p=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?R*0.45:R;p.push((cx+rr*Math.cos(a)).toFixed(1)+','+(cy+rr*Math.sin(a)).toFixed(1));}return p.join(' ');}
+function renderMap(){const svg=$('worldMap'),l=level(),p=state.progress;svg.replaceChildren();
+ let bg='';for(let i=0;i<3;i++)bg+=`<g class="cloud" style="animation-delay:${-i*13}s"><path d="M-40,${62+i*140} q6,-14 22,-10 q8,-12 24,-4 q16,-6 20,10 z" fill="#ffffff" stroke="#1b1b2f" stroke-width="2"/></g>`;
+ bg+=`<polyline class="path" points="${REGIONS.map(r=>r.x+','+r.y).join(' ')}" fill="none" stroke="#1b1b2f" stroke-width="3" stroke-linecap="round"/>`;
+ svg.innerHTML=bg;
+ REGIONS.forEach((r,i)=>{const locked=!regionUnlocked(r,l);const g=document.createElementNS(SVGNS,'g');g.setAttribute('class','island'+(locked?' locked':'')+(p.region===r.id?' sel':''));g.setAttribute('tabindex','0');g.setAttribute('role','button');g.dataset.region=r.id;
+  g.setAttribute('aria-label',`${r.name}${locked?`, locked until level ${r.minLevel}`:''}${p.region===r.id?', selected':''}`);
+  const inner=document.createElementNS(SVGNS,'g');inner.setAttribute('class','float');inner.setAttribute('style',`animation-delay:${-i*0.7}s`);
+  const beaten=(p.defeats[r.mon.id]||0)>0,fresh=CONFIG.FEATURES.npcs&&r.npc&&!locked&&npcHasNew(p,r.npc);
+  inner.innerHTML=`<circle cx="${r.x}" cy="${r.y-10}" r="58" fill="transparent"/><ellipse class="ring" cx="${r.x}" cy="${r.y}" rx="58" ry="22" fill="none" stroke="transparent" stroke-width="4"/>`+platform(r.x,r.y,48,locked?'#d9d2c8':r.color)+monsterSvg(r.mon,r.x+(r.npc?14:0),r.y-2,0.42,false)+(r.npc&&CONFIG.FEATURES.npcs?npcSvg(r.npc,r.x-20,r.y+2,0.42):'')+
+   (beaten?`<polygon class="star" points="${starPts(r.x+40,r.y-58,11)}" fill="#ffd166" stroke="#1b1b2f" stroke-width="2"/>`:'')+
+   (fresh?`<g class="badge"><circle cx="${r.x-36}" cy="${r.y-40}" r="11" fill="#e4572e"/><rect x="${r.x-37.5}" y="${r.y-47}" width="3" height="9" fill="#fff"/><rect x="${r.x-37.5}" y="${r.y-36}" width="3" height="3" fill="#fff"/></g>`:'')+
+   (locked?`<rect x="${r.x-9}" y="${r.y-34}" width="18" height="14" rx="2" fill="#62667a"/><path d="M${r.x-5},${r.y-34} v-5 a5,5 0 0 1 10,0 v5" fill="none" stroke="#62667a" stroke-width="3"/>`:'');
+  const t=document.createElementNS(SVGNS,'text');t.setAttribute('x',String(r.x));t.setAttribute('y',String(r.y+44));t.setAttribute('text-anchor','middle');t.setAttribute('class','lbl');t.textContent=locked?`Lv ${r.minLevel}`:r.name;inner.appendChild(t);
+  g.appendChild(inner);g.addEventListener('click',()=>guard(()=>selectRegion(r.id)));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();guard(()=>selectRegion(r.id));}});svg.appendChild(g);});
+ const cur=regionById(p.region)||REGIONS[0];const hero=document.createElementNS(SVGNS,'g');hero.id='mapHero';hero.setAttribute('aria-hidden','true');hero.style.transform=`translate(${cur.x+50}px,${cur.y+6}px)`;hero.innerHTML=heroSvg(l,0,0,0.42);svg.appendChild(hero);
+ renderRegionPanel();}
+function selectRegion(id){const r=regionById(id);if(!r)return;state.progress.region=id;safeSave();
+ document.querySelectorAll('#worldMap .island').forEach(g=>{g.classList.toggle('sel',g.dataset.region===id);const rr=regionById(g.dataset.region);g.setAttribute('aria-label',`${rr.name}${regionUnlocked(rr,level())?'':`, locked until level ${rr.minLevel}`}${rr.id===id?', selected':''}`);});
+ const h=$('mapHero');if(h)h.style.transform=`translate(${r.x+50}px,${r.y+6}px)`;renderRegionPanel();}
+function renderRegionPanel(){const p=state.progress,r=regionById(p.region)||REGIONS[0],l=level(),locked=!regionUnlocked(r,l),idx=REGIONS.indexOf(r)+1;
+ $('regionEyebrow').textContent=`Region ${idx} of ${REGIONS.length}`;$('regionName').textContent=r.name;
+ const mon=$('regionMon');mon.setAttribute('aria-label',r.mon.name);mon.innerHTML=platform(80,92,52,locked?'#d9d2c8':r.color)+`<g class="bob">${monsterSvg(r.mon,80,88,0.75,false)}</g>`;
+ const n=cardsInDecks(r.decks).length;
+ $('regionMeta').textContent=`${r.mon.name} · HP ${r.mon.hp} · ATK ${r.mon.atk} · ${n} cards · Defeated ${p.defeats[r.mon.id]||0}×`;
+ const f=$('fightBtn');f.disabled=locked;f.textContent=locked?`Locked until level ${r.minLevel}`:`Fight ${r.mon.name}`;
+ const t=$('teacherBtn');const show=CONFIG.FEATURES.npcs&&!!r.npc;t.classList.toggle('hidden',!show);
+ if(show){const npc=NPCS[r.npc],left=npc.lessons.filter(x=>!p.lessons[x.id]).length;t.disabled=locked;t.textContent=locked?`${npc.name} (locked)`:`Visit ${npc.name}${left?` · ${left} new`:''}`;}}
+
+/* ===== NPC & LESSONS ===== */
+function openNpc(id){const npc=NPCS[id];if(!npc)return;state.npc=id;$('npcArt').innerHTML=platform(100,108,64)+`<g class="bob">${npcSvg(id,100,102,1.5)}</g>`;$('npcArt').setAttribute('aria-label',npc.name);
+ $('npcName').textContent=npc.name;$('npcGreet').textContent=npc.greet;const list=$('lessonList');list.replaceChildren();
+ npc.lessons.forEach((les,i)=>{const b=document.createElement('button');b.className='btn';b.dataset.lesson=les.id;const a=document.createElement('span');a.textContent=`${i+1}. ${les.title}`;const s=document.createElement('span');const done=!!state.progress.lessons[les.id];s.className=done?'done':'';s.textContent=done?'✓ learned':`+${CONFIG.LESSON_XP} XP`;b.append(a,s);b.addEventListener('click',()=>guard(()=>startLesson(id,les.id)));list.appendChild(b);});
+ showView('npc');}
+function startLesson(npcId,lessonId){const npc=NPCS[npcId];const les=npc&&npc.lessons.find(l=>l.id===lessonId);if(!les)return;state.lesson={npc:npcId,id:lessonId,step:0,solved:false};
+ $('lessonArt').innerHTML=platform(100,108,64)+`<g class="bob">${npcSvg(npcId,100,102,1.5)}</g>`;$('lessonArt').setAttribute('aria-label',npc.name);$('lessonTitle').textContent=les.title;
+ $('lessonQuiz').classList.add('hidden');$('lessonDoneBtn').classList.add('hidden');$('lessonNextBtn').classList.remove('hidden');showView('lesson');renderLessonStep();}
+function renderLessonStep(){const L=state.lesson,les=NPCS[L.npc].lessons.find(l=>l.id===L.id);$('lessonStep').textContent=`${NPCS[L.npc].name} · ${Math.min(L.step+1,les.lines.length)} / ${les.lines.length}`;$('lessonText').textContent=les.lines[L.step];$('lessonNextBtn').textContent=L.step<les.lines.length-1?'Next →':'Pop quiz →';$('lessonNextBtn').focus();}
+function lessonNext(){const L=state.lesson;if(!L||state.view!=='lesson')return;const les=NPCS[L.npc].lessons.find(l=>l.id===L.id);if(L.step<les.lines.length-1){L.step++;renderLessonStep();return;}
+ if(!$('lessonQuiz').classList.contains('hidden'))return;
+ $('lessonNextBtn').classList.add('hidden');$('lessonQuiz').classList.remove('hidden');const card=CARD_BY_ID[les.quiz];$('lAsk').textContent='Pop quiz · '+ASK_LABEL[card.ask];setPrompt($('lPrompt'),card.front);$('lHint').textContent=card.hint||DECK_HINT[card.deck]||'';$('lFeedback').textContent='';
+ $('lessonText').textContent='Now you try. No pressure. (A little pressure.)';
+ const box=$('lChoices');box.replaceChildren();answerChoices(card,hashStr(les.id)).forEach(t=>makeChoice(box,t,lessonAnswer));const f=box.querySelector('button');if(f)f.focus();}
+function lessonAnswer(btn,value){const L=state.lesson;if(!L||L.solved)return;const les=NPCS[L.npc].lessons.find(l=>l.id===L.id),card=CARD_BY_ID[les.quiz],npc=NPCS[L.npc];
+ recordCard(state.progress,card.id,value===card.answer,today());
+ if(value!==card.answer){btn.disabled=true;btn.classList.add('wrong');$('lFeedback').textContent=`${npc.name}: Nope! Look again. ${les.tip}`;safeSave();return;}
+ L.solved=true;document.querySelectorAll('#lChoices .choice').forEach(b=>{b.disabled=true;});btn.classList.add('correct');
+ const xp=completeLesson(state.progress,L.id);const r=addXp(state.progress,xp);
+ $('lFeedback').textContent=xp?`Correct! +${xp} XP. ${npc.name} is proud of you.`:'Correct! You already learned this one.';levelUpToast(r);
+ safeSave();renderHeader();$('lessonDoneBtn').classList.remove('hidden');$('lessonDoneBtn').focus();}
+function leaveLesson(){const id=state.lesson&&state.lesson.npc;state.lesson=null;if(id)openNpc(id);else{renderMap();showView('map');}}
+
+/* ===== BATTLE ===== */
+let sparkTimer=null,cutTimer=null;
+function dropTimer(t){if(t!=null){clearTimeout(t);state.fxTimers.delete(t);}}
+function fx(kind,side,text,sfx){if(reduceMotion())return;const box=$('floaters');if(!box)return;
+ while(box.children.length){const old=box.firstChild;dropTimer(old._t);old.remove();}
+ if(kind!=='none'){const d=document.createElement('div');d.className='floater '+kind;d.textContent=text;d.style.left=(side==='monster'?70:22)+'%';d.style.top='30%';box.appendChild(d);d._t=later(()=>d.remove(),900);}
+ if(sfx&&CONFIG.FEATURES.mangaFx){const f=document.createElement('div');f.className='sfx'+(side==='hero'?' bad':'');f.textContent=sfx;f.style.left=(side==='monster'?44:4)+'%';f.style.top='3%';box.appendChild(f);f._t=later(()=>f.remove(),800);}
+ if(kind==='dmg'){const svg=$('stageArt'),cx=side==='monster'?220:80;dropTimer(sparkTimer);const made=[];for(let i=0;i<6;i++){const s=document.createElementNS(SVGNS,'rect');s.setAttribute('x',String(cx));s.setAttribute('y','100');s.setAttribute('width','5');s.setAttribute('height','5');s.setAttribute('fill',i%2?'#ffd166':'#e4572e');s.setAttribute('class','spark');s.setAttribute('style',`--dx:${Math.round(Math.cos(i)*30)}px;--dy:${Math.round(Math.sin(i)*30-10)}px`);svg.appendChild(s);made.push(s);}
+  sparkTimer=later(()=>{sparkTimer=null;made.forEach(s=>s.remove());},550);}}
+function renderStage(anim){const b=state.battle,r=regionById(b.regionId);const heroCls=anim==='heroAttack'?'lunge-r':anim==='monAttack'?'hit':'';const monCls=b.result==='win'?'sink':anim==='heroAttack'?'hit':anim==='monAttack'?'lunge-l':'';
+ $('battleStage').style.setProperty('--tint',r.color);$('stageArt').innerHTML=platform(80,140,55)+platform(220,140,55,r.color)+`<g class="${heroCls}"><g class="bob">${heroSvg(b.level,80,134,1.2)}</g></g><g class="${monCls}"><g class="bob">${monsterSvg(r.mon,220,134,1.2,b.enraged)}</g></g>`;
+ $('heroHpLabel').textContent=`You ${b.heroHp}/${b.heroMax}`;$('monHpLabel').textContent=`${b.enraged?'Angry ':''}${r.mon.name} ${b.monsterHp}/${b.monsterMax}`;
+ $('heroHpFill').style.width=`${b.heroHp/b.heroMax*100}%`;$('monHpFill').style.width=`${b.monsterHp/b.monsterMax*100}%`;}
+function say(kind,line){if(!CONFIG.FEATURES.drama||!line)return;const b=state.battle;if(!b)return;const r=regionById(b.regionId),face=$('dramaFace');
+ if(kind==='hero'){face.setAttribute('viewBox','-17 -94 36 42');face.innerHTML=heroSvg(b.level,0,0,1);$('dramaWho').textContent=HERO_NAME;}
+ else{face.setAttribute('viewBox','-48 -114 96 118');face.innerHTML=monsterSvg(r.mon,0,0,1,b.enraged);$('dramaWho').textContent=(b.enraged?'Angry ':'')+r.mon.name;}
+ const box=$('dramaBox');box.classList.toggle('mon',kind!=='hero');$('dramaText').textContent=lineText(line);box.classList.remove('hidden');}
+function cutIn(kind,text){if(!CONFIG.FEATURES.mangaFx||reduceMotion())return;const c=$('cutIn'),b=state.battle;if(!c||!b)return;const r=regionById(b.regionId),art=$('cutInArt');
+ if(kind==='hero'){art.setAttribute('viewBox','-14 -84 30 24');art.innerHTML=heroSvg(b.level,0,0,1);}else{art.setAttribute('viewBox',CLOSEUP[r.mon.shape]||'-30 -100 60 60');art.innerHTML=monsterSvg(r.mon,0,0,1,b.enraged);}
+ $('cutInText').textContent=text;c.classList.remove('hidden');const band=c.firstElementChild;band.style.animation='none';void band.offsetWidth;band.style.animation='';
+ dropTimer(cutTimer);cutTimer=later(()=>{cutTimer=null;c.classList.add('hidden');},950);}
+function renderSkillButtons(){const b=state.battle;const f=$('focusBtn'),m=$('healBtn');
+ f.classList.toggle('hidden',!b.skills.includes('focus'));m.classList.toggle('hidden',!b.skills.includes('mend'));
+ f.disabled=!canFocus(b);m.disabled=b.usedMend||!!b.result||b.heroHp>=b.heroMax;}
+function startBattle(regionId){const r=regionById(regionId);if(!r||!regionUnlocked(r,level())||!CONFIG.FEATURES.rpg)return;clearFx();
+ state.battle=createBattle(r,level(),Date.now(),state.progress.defeats[r.mon.id]);
+ $('bDoneBtn').classList.add('hidden');$('fleeBtn').disabled=false;$('tipBox').classList.add('hidden');
+ $('bLog').textContent=state.battle.enraged?`An ANGRY ${r.mon.name} appears! It remembers you.`:`${r.mon.name} appears!`;$('dramaBox').classList.add('hidden');showView('battle');battleTurn();
+ const b=state.battle,D=DRAMA.mon[r.mon.id];say('mon',b.enraged?DRAMA.angry:pickLine(D.intro,b.seed));cutIn('mon',(b.enraged?'ゴゴゴゴ… ':'')+`${r.mon.name}, ${D.title}`);}
+function battleTurn(){const b=state.battle;const card=nextCard(b,state.progress.cards);
+ setPrompt($('bPrompt'),card.front);$('bHint').textContent=card.hint||DECK_HINT[card.deck]||'';$('battleTitle').textContent=ASK_LABEL[card.ask];
+ const box=$('bChoices');box.replaceChildren();answerChoices(card,b.seed+b.turn).forEach(t=>makeChoice(box,t,battleAnswer));
+ $('bNextBtn').classList.add('hidden');renderStage(null);renderSkillButtons();const first=box.querySelector('button');if(first)first.focus();}
+function battleAnswer(btn,value){const b=state.battle;if(!b||b.answered||b.result)return;const r=regionById(b.regionId);const card=CARD_BY_ID[b.cardId];const ok=value===card.answer;
+ resolveAnswer(b,ok);recordCard(state.progress,card.id,ok,today());
+ document.querySelectorAll('#bChoices .choice').forEach(x=>{x.disabled=true;if(x.textContent===card.answer)x.classList.add('correct');});if(!ok)btn.classList.add('wrong');
+ if(ok)$('bLog').textContent=`You hit for ${b.last.amount}${b.last.crit?' (combo!)':''}.`;
+ else if(b.last.blocked)$('bLog').textContent=`Ward blocks the hit! Answer: “${card.answer}”.`;
+ else $('bLog').textContent=`${r.mon.name} hits you for ${b.last.amount}. Answer: “${card.answer}”.`;
+ renderStage(ok?'heroAttack':'monAttack');
+ const R=rng(b.seed+b.turn*13),S=b.seed+b.turn*31,D=DRAMA.mon[r.mon.id];
+ if(ok){fx('dmg','monster','-'+b.last.amount,b.last.crit?SFX.crit:SFX.hit[Math.floor(R()*SFX.hit.length)]);if(b.last.crit){const l=pickLine(DRAMA.hero.combo,S);say('hero',l);cutIn('hero',l.ja);}else say('hero',pickLine(DRAMA.hero.hit,S));}
+ else if(b.last.blocked){fx('none','hero','',SFX.block);say('hero',pickLine(DRAMA.hero.ward,S));}
+ else{fx('dmg','hero','-'+b.last.amount,SFX.hurt[Math.floor(R()*SFX.hurt.length)]);if(b.heroHp>0&&b.heroHp<=b.heroMax*0.3)say('hero',pickLine(DRAMA.hero.low,S));else say('mon',pickLine(D.taunt,S));}
+ const tipNpc=npcForCard(card);
+ if(!ok&&CONFIG.FEATURES.battleTips&&CONFIG.FEATURES.npcs&&tipNpc){const tip=TIPS[card.id];$('tipArt').innerHTML=npcSvg(tipNpc,0,0,1);$('tipText').textContent=`${NPCS[tipNpc].name}: ${tip?tip.text:`${card.front} is “${card.answer}”. Say it out loud three times. Yes, out loud.`}`;$('tipBox').classList.remove('hidden');}
+ else $('tipBox').classList.add('hidden');
+ renderSkillButtons();
+ if(b.result)endBattle(r);else{$('bNextBtn').classList.remove('hidden');$('bNextBtn').focus();}
+ safeSave();renderHeader();}
+function endBattle(r){const b=state.battle;const xp=battleReward(b);const res=addXp(state.progress,xp);
+ if(b.result==='win')state.progress.defeats[r.mon.id]=(state.progress.defeats[r.mon.id]||0)+1;
+ $('bLog').textContent=b.result==='win'?`Victory! ${r.mon.name} is defeated. +${xp} XP`:`You were defeated. +${xp} XP for trying. Visit the teacher and come back stronger.`;
+ const D=DRAMA.mon[r.mon.id];if(b.result==='win'){say('mon',D.defeat);cutIn('hero',pickLine(DRAMA.hero.win,b.seed+b.turn).ja);}else say('hero',pickLine(DRAMA.hero.lose,b.seed));
+ levelUpToast(res);
+ $('fleeBtn').disabled=true;$('bNextBtn').classList.add('hidden');$('bDoneBtn').classList.remove('hidden');$('bDoneBtn').focus();safeSave();renderHeader();}
+function battleNext(){const b=state.battle;if(!b||!b.answered||b.result)return;$('tipBox').classList.add('hidden');battleTurn();}
+function doFocus(){const b=state.battle;if(!b||!canFocus(b))return;b.usedFocus=true;const card=CARD_BY_ID[b.cardId];let removed=0;document.querySelectorAll('#bChoices .choice').forEach(x=>{if(removed<2&&x.textContent!==card.answer){x.disabled=true;x.style.visibility='hidden';removed++;}});$('bLog').textContent='Focus: two wrong answers fade away.';renderSkillButtons();}
+function doMend(){const b=state.battle;if(!b)return;const before=b.heroHp;if(useMend(b)){$('bLog').textContent='Mend: you recover some HP.';renderStage(null);fx('heal','hero','+'+(b.heroHp-before),SFX.heal);renderSkillButtons();}}
+function leaveBattle(){clearFx();state.battle=null;$('fleeBtn').disabled=false;$('tipBox').classList.add('hidden');renderHome();renderMap();showView('map');}
+
+/* ===== DOJO ===== */
+function startQuiz(mode){state.deck=$('deckSelect').value;if(!TRAIN_DECKS.hasOwnProperty(state.deck))state.deck='hiragana';state.mode=mode;state.queue=buildQueue(state.deck,mode,CONFIG.QUIZ_LENGTH,Date.now(),state.progress.cards);state.index=0;state.correct=0;state.answered=false;if(!state.queue.length){reportError('No cards in this deck.');return;}showView('quiz');renderQuestion();}
+function renderQuestion(){const card=state.queue[state.index];state.answered=false;setPrompt($('prompt'),card.front);$('hint').textContent=card.hint||DECK_HINT[card.deck]||'';$('quizTitle').textContent=ASK_LABEL[card.ask];$('feedback').textContent='';$('nextBtn').classList.add('hidden');$('counter').textContent=`${state.index+1} / ${state.queue.length}`;$('progressFill').style.width=`${state.index/state.queue.length*100}%`;const box=$('choices');box.replaceChildren();answerChoices(card,state.index+hashStr(card.id)).forEach(t=>makeChoice(box,t,chooseAnswer));const f=box.querySelector('button');if(f)f.focus();}
+function chooseAnswer(btn,value){if(state.answered||state.view!=='quiz')return;state.answered=true;const card=state.queue[state.index];const ok=value===card.answer;if(ok)state.correct++;recordCard(state.progress,card.id,ok,today());const r=addXp(state.progress,ok?CONFIG.DOJO_XP_CORRECT:CONFIG.DOJO_XP_WRONG);levelUpToast(r);safeSave();renderHeader();
+ document.querySelectorAll('#choices .choice').forEach(b=>{b.disabled=true;if(b.textContent===card.answer)b.classList.add('correct');});if(!ok)btn.classList.add('wrong');
+ $('feedback').textContent=ok?`Correct! +${CONFIG.DOJO_XP_CORRECT} XP`:`Not this time. The answer is “${card.answer}”. +${CONFIG.DOJO_XP_WRONG} XP`;$('nextBtn').classList.remove('hidden');$('nextBtn').focus();}
+function nextQuestion(){if(!state.answered)return;if(state.index<state.queue.length-1){state.index++;renderQuestion();}else finishQuiz();}
+function finishQuiz(){$('progressFill').style.width='100%';$('resultScore').textContent=`${state.correct}/${state.queue.length}`;const pct=state.correct/state.queue.length;$('resultText').textContent=pct===1?'Perfect round. Your hero feels sharper.':pct>=.7?'Strong work. Review the missed cards once more.':'Good start. Short, repeated rounds will make these familiar.';showView('result');}
+
+/* ===== WIRING ===== */
+function guard(fn){try{return fn();}catch(e){reportError('Something went wrong, but the app is still running.',e);}}
+function bind(id,fn){const el=$(id);if(!el)throw new Error('Missing element: '+id);el.addEventListener('click',()=>guard(fn));}
+function pressNumber(sel,n){const b=document.querySelectorAll(sel)[n-1];if(b&&!b.disabled&&b.style.visibility!=='hidden')b.click();}
+function onKey(e){if(e.target&&(e.target.tagName==='SELECT'||e.target.classList&&e.target.classList.contains('island')))return;const n=Number(e.key);const num=n>=1&&n<=4;const go=e.key==='Enter'||e.key===' ';
+ if(state.view==='quiz'){if(!state.answered&&num)pressNumber('#choices .choice',n);else if(state.answered&&go&&e.target===document.body){e.preventDefault();nextQuestion();}}
+ else if(state.view==='battle'&&state.battle){const b=state.battle;if(!b.answered&&!b.result&&num)pressNumber('#bChoices .choice',n);else if(b.answered&&!b.result&&go&&e.target===document.body){e.preventDefault();battleNext();}}
+ else if(state.view==='lesson'&&state.lesson&&!state.lesson.solved&&num&&!$('lessonQuiz').classList.contains('hidden'))pressNumber('#lChoices .choice',n);}
+function init(){$('ver').textContent=CONFIG.APP_VERSION;state.progress=safeLoad();
+ bind('adventureBtn',()=>{renderMap();showView('map');});bind('mapHomeBtn',()=>{renderHome();showView('home');});
+ bind('fightBtn',()=>startBattle(state.progress.region));bind('teacherBtn',()=>{const r=regionById(state.progress.region);if(r&&r.npc&&regionUnlocked(r,level()))openNpc(r.npc);});
+ bind('npcBackBtn',()=>{renderMap();showView('map');});bind('lessonBackBtn',leaveLesson);bind('lessonNextBtn',lessonNext);bind('lessonDoneBtn',leaveLesson);
+ bind('startBtn',()=>startQuiz('normal'));bind('practiceBtn',()=>startQuiz('weak'));bind('quitBtn',()=>{renderHome();showView('home');});bind('nextBtn',nextQuestion);bind('againBtn',()=>startQuiz(state.mode));bind('homeBtn',()=>{renderHome();showView('home');});
+ bind('bNextBtn',battleNext);bind('focusBtn',doFocus);bind('healBtn',doMend);bind('fleeBtn',()=>{if(state.battle&&!state.battle.result)leaveBattle();});bind('bDoneBtn',leaveBattle);
+ document.addEventListener('keydown',e=>guard(()=>onKey(e)));renderHome();}
+window.addEventListener('error',e=>state.errors.push(String(e.error&&e.error.message||e.message||'error')));
+window.addEventListener('unhandledrejection',e=>state.errors.push(String(e.reason&&e.reason.message||e.reason||'rejection')));
+window.KotobaQuestTest={DRAMA,SFX,CLOSEUP,HERO_NAME,pickLine,lineText,heroSvg,monsterSvg,npcSvg,heroLook,CONFIG,CARDS,CARD_BY_ID,REGIONS,SKILLS,NPCS,LESSONS,TIPS,TRAIN_DECKS,state,xpForLevel,levelFromXp,heroStats,skillsFor,seededShuffle,getPool,cardsInDecks,weightedPool,buildQueue,answerChoices,regionById,regionUnlocked,createBattle,nextCard,resolveAnswer,useMend,canFocus,battleReward,createDefaultProgress,safeParseProgress,updateStreak,recordCard,addXp,completeLesson,npcHasNew,unlocksBetween,npcForCard};
+init();
+
+</script>
+</body>
+</html>
